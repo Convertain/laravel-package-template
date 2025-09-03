@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 /**
- * Trait HasPublicId
- * 
+ * Trait HasPublicId.
+ *
  * Adds UUID support to models while keeping integer primary keys.
  * The UUID is stored in a 'uuid' column and used for public-facing routes.
  */
@@ -32,7 +32,7 @@ trait HasPublicId
      */
     public function initializeHasPublicId(): void
     {
-        if (! isset($this->casts['uuid'])) {
+        if (!isset($this->casts['uuid'])) {
             $this->casts['uuid'] = 'string';
         }
     }
@@ -43,7 +43,7 @@ trait HasPublicId
     protected static function generatePublicId(): string
     {
         $config = config('package-template.public_id_type', 'uuid');
-        
+
         return match ($config) {
             'ulid' => (string) Str::ulid(),
             'uuid' => (string) Str::uuid(),
@@ -77,7 +77,7 @@ trait HasPublicId
      */
     protected function shouldUseSeoSlug(): bool
     {
-        if (! method_exists($this, 'useSeoSlugForRouting')) {
+        if (!method_exists($this, 'useSeoSlugForRouting')) {
             return false;
         }
 

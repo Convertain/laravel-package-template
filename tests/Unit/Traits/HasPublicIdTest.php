@@ -16,16 +16,16 @@ class TestModel extends Model
 it('generates a UUID when creating a model', function () {
     $model = new TestModel();
     $model->name = 'Test';
-    
+
     // Simulate the creating event
     $creatingClosure = null;
     $reflection = new ReflectionClass($model);
     $method = $reflection->getMethod('bootHasPublicId');
     $method->setAccessible(true);
-    
+
     // The UUID should be generated
     expect($model->uuid)->toBeNull();
-    
+
     // After simulating creation
     $model->uuid = Str::uuid()->toString();
     expect($model->uuid)->toBeString();
@@ -39,25 +39,25 @@ it('uses UUID as route key by default', function () {
 
 it('can find model by public ID', function () {
     $uuid = Str::uuid()->toString();
-    
+
     $mock = Mockery::mock(TestModel::class)->makePartial();
     $mock->shouldReceive('wherePublicId')
         ->with($uuid)
         ->andReturnSelf();
     $mock->shouldReceive('first')
         ->andReturn($mock);
-    
+
     $result = $mock::findByPublicId($uuid);
     expect($result)->toBe($mock);
 });
 
 it('generates ULID when configured', function () {
     config()->set('package-template.public_id_type', 'ulid');
-    
+
     $reflection = new ReflectionClass(TestModel::class);
     $method = $reflection->getMethod('generatePublicId');
     $method->setAccessible(true);
-    
+
     $publicId = $method->invoke(null);
     expect($publicId)->toBeString();
     // ULIDs are 26 characters long

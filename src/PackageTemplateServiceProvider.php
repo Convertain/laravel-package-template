@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Convertain\PackageTemplate;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 
 class PackageTemplateServiceProvider extends ServiceProvider
 {
@@ -31,7 +31,7 @@ class PackageTemplateServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(
             __DIR__.'/../config/package-template.php',
-            'package-template'
+            'package-template',
         );
     }
 
