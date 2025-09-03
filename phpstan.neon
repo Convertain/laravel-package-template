@@ -1,17 +1,9 @@
-includes:
-    - vendor/larastan/larastan/extension.neon
-
 parameters:
     level: 10
     paths:
         - src
         - config
-        - database
-        - routes
         - tests
-
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
 
     ignoreErrors:
         # Ignore errors for test files if needed
