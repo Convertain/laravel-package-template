@@ -62,7 +62,7 @@ trait HasPublicId
     {
         // Check if model has SEO slug support and it's configured
         if ($this->hasSeoSlug() && $this->shouldUseSeoSlug()) {
-            /** @var string */
+            /* @var string */
             return method_exists($this, 'getSeoSlugColumn') ? $this->getSeoSlugColumn() : 'uuid';
         }
 
@@ -86,14 +86,15 @@ trait HasPublicId
             return false;
         }
 
-        /** @var bool */
+        /* @var bool */
         return $this->useSeoSlugForRouting();
     }
 
     /**
      * Scope a query to find by public ID (UUID).
      *
-     * @param  Builder<static>  $query
+     * @param Builder<static> $query
+     *
      * @return Builder<static>
      */
     public function scopeWherePublicId(Builder $query, string $publicId): Builder
@@ -108,7 +109,7 @@ trait HasPublicId
      */
     public static function findByPublicId(string $publicId): ?Model
     {
-        /** @var static|null */
+        /* @var static|null */
         return static::wherePublicId($publicId)->first();
     }
 
@@ -119,7 +120,7 @@ trait HasPublicId
      */
     public static function findByPublicIdOrFail(string $publicId): Model
     {
-        /** @var static */
+        /* @var static */
         return static::wherePublicId($publicId)->firstOrFail();
     }
 }

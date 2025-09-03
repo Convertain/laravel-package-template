@@ -29,7 +29,7 @@ uses(TestCase::class)->in('Feature', 'Unit');
 */
 
 expect()->extend('toBeOne', function (): Pest\Expectation {
-    /** @var Pest\Expectation $this */
+    /* @var Pest\Expectation $this */
     return $this->toBe(1);
 });
 
