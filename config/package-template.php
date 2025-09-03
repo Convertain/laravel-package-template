@@ -22,7 +22,7 @@ return [
     | for models using the HasPublicId trait. Options: 'uuid', 'ulid'
     |
     */
-    'public_id_type' => env('PACKAGE_PUBLIC_ID_TYPE', 'uuid'),
+    'public_id_type' => 'uuid',
 
     /*
     |--------------------------------------------------------------------------
@@ -33,7 +33,7 @@ return [
     |
     */
     'features' => [
-        'example_feature' => env('PACKAGE_EXAMPLE_FEATURE', true),
+        'example_feature' => true,
     ],
 
     /*
@@ -46,13 +46,13 @@ return [
     */
     'integrations' => [
         'organizations' => [
-            'enabled' => env('PACKAGE_ORGANIZATIONS_ENABLED', true),
+            'enabled' => true,
         ],
         'permissions' => [
-            'enabled' => env('PACKAGE_PERMISSIONS_ENABLED', true),
+            'enabled' => true,
         ],
         'checkout' => [
-            'enabled' => env('PACKAGE_CHECKOUT_ENABLED', true),
+            'enabled' => true,
         ],
     ],
 
@@ -65,8 +65,8 @@ return [
     |
     */
     'routes' => [
-        'prefix' => env('PACKAGE_ROUTE_PREFIX', ''),
+        'prefix' => '',
         'middleware' => ['web'],
-        'locale_prefix' => env('PACKAGE_LOCALE_PREFIX', 'en'),
+        'locale_prefix' => 'en',
     ],
 ];

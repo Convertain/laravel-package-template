@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Convertain\PackageTemplate\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
  *
  * Adds UUID support to models while keeping integer primary keys.
  * The UUID is stored in a 'uuid' column and used for public-facing routes.
+ *
+ * @property string $uuid
  */
 trait HasPublicId
 {
@@ -20,8 +23,9 @@ trait HasPublicId
      */
     protected static function bootHasPublicId(): void
     {
-        static::creating(function (Model $model) {
-            if (empty($model->uuid)) {
+        static::creating(function (Model $model): void {
+            /** @var self $model */
+            if (!isset($model->uuid) || empty($model->uuid)) {
                 $model->uuid = static::generatePublicId();
             }
         });
@@ -58,7 +62,8 @@ trait HasPublicId
     {
         // Check if model has SEO slug support and it's configured
         if ($this->hasSeoSlug() && $this->shouldUseSeoSlug()) {
-            return $this->getSeoSlugColumn();
+            /** @var string */
+            return method_exists($this, 'getSeoSlugColumn') ? $this->getSeoSlugColumn() : 'uuid';
         }
 
         return 'uuid';
@@ -81,30 +86,40 @@ trait HasPublicId
             return false;
         }
 
+        /** @var bool */
         return $this->useSeoSlugForRouting();
     }
 
     /**
      * Scope a query to find by public ID (UUID).
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
-    public function scopeWherePublicId($query, string $publicId)
+    public function scopeWherePublicId(Builder $query, string $publicId): Builder
     {
         return $query->where('uuid', $publicId);
     }
 
     /**
      * Find a model by its public ID.
+     *
+     * @return static|null
      */
-    public static function findByPublicId(string $publicId): ?static
+    public static function findByPublicId(string $publicId): ?Model
     {
+        /** @var static|null */
         return static::wherePublicId($publicId)->first();
     }
 
     /**
      * Find a model by its public ID or fail.
+     *
+     * @return static
      */
-    public static function findByPublicIdOrFail(string $publicId): static
+    public static function findByPublicIdOrFail(string $publicId): Model
     {
+        /** @var static */
         return static::wherePublicId($publicId)->firstOrFail();
     }
 }

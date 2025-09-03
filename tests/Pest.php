@@ -28,7 +28,8 @@ uses(TestCase::class)->in('Feature', 'Unit');
 |
 */
 
-expect()->extend('toBeOne', function () {
+expect()->extend('toBeOne', function (): Pest\Expectation {
+    /** @var Pest\Expectation $this */
     return $this->toBe(1);
 });
 
@@ -43,7 +44,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function something(): void
 {
     // ..
 }
