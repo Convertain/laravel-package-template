@@ -23,6 +23,15 @@ parameters:
             message: '#Call to an undefined method Mockery#'
             paths:
                 - tests/*
+        # Ignore static return type issues in traits (PHPStan limitation)
+        -
+            message: '#Method .+::findByPublicId\(\) should return static\(.+\)\|null but returns .+\|null#'
+            paths:
+                - src/Traits/*
+        -
+            message: '#Method .+::findByPublicIdOrFail\(\) should return static\(.+\) but returns .+#'
+            paths:
+                - src/Traits/*
 
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: true
