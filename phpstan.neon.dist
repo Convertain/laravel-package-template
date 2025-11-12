@@ -1,9 +1,13 @@
 parameters:
-    level: 5
+    level: 7
     paths:
         - src
         - config
         - tests
+    excludePaths:
+        - vendor
+        - storage
+        - bootstrap/cache
 
     ignoreErrors:
         # Ignore errors for test files

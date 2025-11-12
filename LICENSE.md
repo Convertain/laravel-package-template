@@ -1,21 +1,37 @@
-MIT License
+# Proprietary Software License
 
-Copyright (c) 2025 Convertain Limited
+Copyright (c) 2025 Convertain Limited. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## License Grant
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This software and associated documentation files (the "Software") are the proprietary and confidential property of Convertain Limited ("Convertain").
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## Restrictions
+
+1. **No Redistribution**: You may not copy, distribute, publish, transfer, or make available the Software to any third party without prior written consent from Convertain.
+
+2. **No Modification**: You may not modify, adapt, translate, reverse engineer, decompile, disassemble, or create derivative works based on the Software.
+
+3. **Limited Use**: The Software may only be used in accordance with the terms of your commercial agreement with Convertain.
+
+4. **No Sublicensing**: You may not sublicense, rent, lease, or lend the Software.
+
+## Ownership
+
+Convertain retains all right, title, and interest in and to the Software, including all intellectual property rights therein.
+
+## Termination
+
+This license is effective until terminated. Your rights under this license will terminate automatically without notice if you fail to comply with any of its terms.
+
+## Warranty Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+## Limitation of Liability
+
+IN NO EVENT SHALL CONVERTAIN BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+## Contact
+
+For licensing inquiries, please contact: <support@convertain.com>

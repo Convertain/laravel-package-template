@@ -10,16 +10,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        php: [8.4]
+        php: [8.2, 8.3, 8.4]
         laravel: [12.*]
-        dependency-version: [prefer-stable]
+        pro-installed: [true, false]
         include:
           - laravel: 12.*
             testbench: 10.*
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }}
+    name: PHP${{ matrix.php }} - L${{ matrix.laravel }} - Pro:${{ matrix.pro-installed }}
 
     steps:
       - name: Checkout code
@@ -35,7 +35,11 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
+          if [ "${{ matrix.pro-installed }}" == "true" ]; then
+            composer update --prefer-stable --prefer-dist --no-interaction
+          else
+            composer update --prefer-stable --prefer-dist --no-interaction --no-dev
+          fi
 
       - name: Validate composer.json
         run: composer validate --strict
@@ -44,10 +48,13 @@ jobs:
         run: vendor/bin/pint --test
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=2G
+        run: vendor/bin/phpstan analyse -c phpstan.neon.dist --no-progress --memory-limit=2G
 
       - name: Execute tests
-        run: vendor/bin/pest
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: vendor/bin/pest --colors=always
 
       # - name: Upload coverage reports
       #   uses: codecov/codecov-action@v4
