@@ -379,11 +379,11 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 };
 
 // Update VS Code (wait for file creation), Cursor, Gemini, Junie, and generic .mcp.json if present
-$rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
-$rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
-$rewriteMcp(__DIR__.'/.gemini/settings.json', false);
-$rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
-$rewriteMcp(__DIR__.'/.mcp.json', false);
+// DISABLED: $rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
+// DISABLED: $rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
+// DISABLED: $rewriteMcp(__DIR__.'/.gemini/settings.json', false);
+// DISABLED: $rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
+// DISABLED: $rewriteMcp(__DIR__.'/.mcp.json', false);
 
 replaceInFiles($files, $replacements);
 
