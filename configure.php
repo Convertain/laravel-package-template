@@ -268,43 +268,8 @@ $testbenchBinary = __DIR__.'/vendor/bin/testbench';
 runCommand($testbenchBinary.' workbench:install --no-interaction --ansi', 'Workbench install failed.');
 runCommand($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
 
-// Ask for Boost configuration interactively
-echo PHP_EOL;
-$useBoostMcp = confirm('Install Laravel Boost MCP server?', true);
-$useBoostGuidelines = confirm('Install Laravel Boost AI guidelines?', true);
-
-if (!$useBoostMcp && !$useBoostGuidelines) {
-    echo 'Skipping Laravel Boost installation.'.PHP_EOL;
-} else {
-    $boostArgs = [];
-    if (!$useBoostGuidelines) {
-        $boostArgs[] = '--ignore-guidelines';
-    }
-    if (!$useBoostMcp) {
-        $boostArgs[] = '--ignore-mcp';
-    }
-
-    $boostCmd = $testbenchBinary.' boost:install --no-interaction --ansi'.($boostArgs ? ' '.implode(' ', $boostArgs) : '');
-    runCommand($boostCmd, 'Boost install failed.');
-
-    // Fix mcp.json to use testbench instead of artisan for package context
-    $mpcConfigPath = __DIR__.'/.vscode/mcp.json';
-    if (file_exists($mpcConfigPath) && $useBoostMcp) {
-        $mpcConfig = json_decode((string) file_get_contents($mpcConfigPath), true, flags: JSON_THROW_ON_ERROR);
-
-        if (isset($mpcConfig['mcpServers']['laravel-boost'])) {
-            $mpcConfig['mcpServers']['laravel-boost'] = [
-                'command' => 'vendor/bin/testbench',
-                'args' => ['boost:mcp'],
-            ];
-
-            file_put_contents(
-                $mpcConfigPath,
-                json_encode($mpcConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL,
-            );
-        }
-    }
-}
+// Phase 2: Interactive Boost setup via Artisan command (now that workbench is available)
+runCommand($testbenchBinary.' boost:setup --ansi', 'Boost setup failed.');
 
 replaceInFiles($files, $replacements);
 
