@@ -105,6 +105,13 @@ $featureOptions = [
     'migrations' => 'Database migrations',
 ];
 
+// Community files options
+$communityOptions = [
+    'contributing' => 'CONTRIBUTING.md',
+    'security' => 'SECURITY.md',
+    'issue_templates' => 'GitHub Issue Templates',
+];
+
 // Check if Laravel Prompts form() is available
 $usePromptsForm = function_exists('Laravel\\Prompts\\form');
 
@@ -187,6 +194,13 @@ if ($usePromptsForm) {
                 hint: 'Select the scaffolding components you need (Space to toggle)',
                 name: 'features',
             )
+            ->multiselect(
+                label: 'Community files to include',
+                options: $communityOptions,
+                default: ['contributing', 'security', 'issue_templates'],
+                hint: 'Documentation for contributors and security reporting',
+                name: 'community_files',
+            )
             ->confirm(
                 label: 'Install Laravel Boost?',
                 default: true,
@@ -215,6 +229,7 @@ if ($usePromptsForm) {
         $githubUrl = $responses['github_url'] ?? '';
         $licenseChoice = $responses['license'];
         $selectedFeatures = $responses['features'] ?? [];
+        $selectedCommunityFiles = $responses['community_files'] ?? [];
         $installBoost = $responses['install_boost'];
         $removeInstaller = $responses['remove_installer'];
         
@@ -226,6 +241,10 @@ if ($usePromptsForm) {
         // Format features for display
         $enabledFeatures = array_filter($featureOptions, fn($key) => in_array($key, $selectedFeatures), ARRAY_FILTER_USE_KEY);
         $featuresDisplay = empty($enabledFeatures) ? '(none)' : implode(', ', $enabledFeatures);
+        
+        // Format community files for display
+        $enabledCommunity = array_filter($communityOptions, fn($key) => in_array($key, $selectedCommunityFiles), ARRAY_FILTER_USE_KEY);
+        $communityDisplay = empty($enabledCommunity) ? '(none)' : implode(', ', $enabledCommunity);
         
         // Show confirmation table
         echo "\n";
@@ -243,6 +262,7 @@ if ($usePromptsForm) {
                 ['GitHub URL', $githubUrl ?: '(not set)'],
                 ['License', $licenseChoice],
                 ['Features', $featuresDisplay],
+                ['Community Files', $communityDisplay],
                 ['Install Boost', $installBoost ? 'Yes' : 'No'],
                 ['Remove Installer', $removeInstaller ? 'Yes' : 'No'],
             ],
@@ -310,6 +330,14 @@ if ($usePromptsForm) {
         }
     }
     
+    echo "\nSelect community files (answer y/n for each):\n";
+    $selectedCommunityFiles = [];
+    foreach ($communityOptions as $key => $label) {
+        if (confirm("Include {$label}?", true)) {
+            $selectedCommunityFiles[] = $key;
+        }
+    }
+    
     $installBoost = confirm('Install Laravel Boost?', true);
     $removeInstaller = confirm('Remove install.php after setup?', true);
 }
@@ -321,6 +349,11 @@ $useRoutesApi = in_array('routes_api', $selectedFeatures);
 $useViews = in_array('views', $selectedFeatures);
 $useTranslations = in_array('translations', $selectedFeatures);
 $useMigrations = in_array('migrations', $selectedFeatures);
+
+// Extract community file flags
+$useContributing = in_array('contributing', $selectedCommunityFiles);
+$useSecurity = in_array('security', $selectedCommunityFiles);
+$useIssueTemplates = in_array('issue_templates', $selectedCommunityFiles);
 
 $replacements = [
     ':vendor_slug' => $vendorSlug,
@@ -650,6 +683,74 @@ if (! file_exists($licenseTemplatePath)) {
 $licenseContent = (string) file_get_contents($licenseTemplatePath);
 $licenseContent = str_replace(array_keys($replacements), array_values($replacements), $licenseContent);
 file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
+
+// Generate community files from templates
+if ($useContributing) {
+    $contributingTemplate = __DIR__.'/data/CONTRIBUTING.md.txt';
+    if (file_exists($contributingTemplate)) {
+        $content = (string) file_get_contents($contributingTemplate);
+        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+        file_put_contents(__DIR__.'/CONTRIBUTING.md', $content);
+        echo "Created CONTRIBUTING.md\n";
+    }
+} else {
+    // Remove CONTRIBUTING.md if it exists from template
+    if (file_exists(__DIR__.'/CONTRIBUTING.md')) {
+        @unlink(__DIR__.'/CONTRIBUTING.md');
+    }
+}
+
+if ($useSecurity) {
+    $securityTemplate = __DIR__.'/data/SECURITY.md.txt';
+    if (file_exists($securityTemplate)) {
+        $content = (string) file_get_contents($securityTemplate);
+        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+        file_put_contents(__DIR__.'/SECURITY.md', $content);
+        echo "Created SECURITY.md\n";
+    }
+} else {
+    // Remove SECURITY.md if it exists from template
+    if (file_exists(__DIR__.'/SECURITY.md')) {
+        @unlink(__DIR__.'/SECURITY.md');
+    }
+}
+
+if ($useIssueTemplates) {
+    $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
+    $dataIssueTemplateDir = __DIR__.'/data/github/ISSUE_TEMPLATE';
+    
+    if (is_dir($dataIssueTemplateDir)) {
+        if (! is_dir($issueTemplateDir)) {
+            mkdir($issueTemplateDir, 0755, true);
+        }
+        
+        foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
+            $sourcePath = $dataIssueTemplateDir.'/'.$templateFile;
+            if (file_exists($sourcePath)) {
+                $content = (string) file_get_contents($sourcePath);
+                $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+                file_put_contents($issueTemplateDir.'/'.$templateFile, $content);
+                echo "Created .github/ISSUE_TEMPLATE/{$templateFile}\n";
+            }
+        }
+    }
+} else {
+    // Remove issue templates if they exist
+    $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
+    if (is_dir($issueTemplateDir)) {
+        foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
+            $filePath = $issueTemplateDir.'/'.$templateFile;
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
+        // Remove directory if empty
+        $entries = @scandir($issueTemplateDir);
+        if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) {
+            @rmdir($issueTemplateDir);
+        }
+    }
+}
 
 runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
 
