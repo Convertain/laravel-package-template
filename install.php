@@ -279,15 +279,45 @@ if (file_exists($mcpPath)) {
     $json = file_get_contents($mcpPath);
     if ($json !== false) {
         $data = json_decode($json, true);
-        if (is_array($data) && isset($data['clients']) && is_array($data['clients'])) {
-            foreach ($data['clients'] as &$client) {
-                if (isset($client['command'])) {
-                    $client['command'] = 'vendor/bin/testbench';
-                    $client['args'] = [];
+        if (is_array($data)) {
+            $updated = false;
+
+            // Handle VS Code MCP server style: mcpServers.laravel-boost
+            if (isset($data['mcpServers']) && is_array($data['mcpServers'])) {
+                if (isset($data['mcpServers']['laravel-boost']) && is_array($data['mcpServers']['laravel-boost'])) {
+                    $data['mcpServers']['laravel-boost']['command'] = 'vendor/bin/testbench';
+                    $data['mcpServers']['laravel-boost']['args'] = ['boost:mcp'];
+                    $updated = true;
                 }
             }
-            file_put_contents($mcpPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
-            echo 'Updated .vscode/mcp.json to use vendor/bin/testbench.'.PHP_EOL;
+
+            // Handle top-level laravel-boost key
+            if (isset($data['laravel-boost']) && is_array($data['laravel-boost'])) {
+                $data['laravel-boost']['command'] = 'vendor/bin/testbench';
+                $data['laravel-boost']['args'] = ['boost:mcp'];
+                $updated = true;
+            }
+
+            // Fallback for other schemas: clients array
+            if (isset($data['clients']) && is_array($data['clients'])) {
+                foreach ($data['clients'] as &$client) {
+                    if (isset($client['command'])) {
+                        $client['command'] = 'vendor/bin/testbench';
+                        // args unknown in this schema; leave as-is unless present
+                        if (isset($client['args']) && is_array($client['args'])) {
+                            // Prefer explicit boost:mcp when schema supports args
+                            $client['args'] = ['boost:mcp'];
+                        }
+                        $updated = true;
+                    }
+                }
+                unset($client);
+            }
+
+            if ($updated) {
+                file_put_contents($mcpPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+                echo 'Updated .vscode/mcp.json to use vendor/bin/testbench for Laravel Boost.'.PHP_EOL;
+            }
         }
     }
 }
