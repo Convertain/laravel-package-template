@@ -285,7 +285,8 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
         }
     }
 
-    if (! file_exists($path)) {
+    // Check if path exists and is a file (not directory)
+    if (! file_exists($path) || is_dir($path)) {
         return;
     }
 
@@ -308,28 +309,37 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
         }
         $changed = false;
 
-        // If there's an args array with artisan or testbench paths, normalize to vendor/bin/testbench
+        // Set command to vendor/bin/testbench
+        if (! isset($config['command']) || $config['command'] !== 'vendor/bin/testbench') {
+            $config['command'] = 'vendor/bin/testbench';
+            $changed = true;
+        }
+
+        // If there's an args array, ensure it contains only boost:mcp
         if (isset($config['args']) && is_array($config['args'])) {
-            $args = &$config['args'];
+            // Check if args needs updating
+            $needsUpdate = false;
             
-            // Replace any artisan path or full testbench path with just vendor/bin/testbench
-            foreach ($args as $idx => &$arg) {
-                if (is_string($arg) && (str_contains($arg, 'artisan') || str_contains($arg, 'testbench'))) {
-                    $args[$idx] = 'vendor/bin/testbench';
-                    $changed = true;
-                    // Keep only vendor/bin/testbench and boost:mcp
-                    $args = array_values(array_slice($args, 0, 1));
-                    if (! in_array('boost:mcp', $args, true)) {
-                        $args[] = 'boost:mcp';
-                    }
+            // Remove any artisan or full testbench paths from args
+            foreach ($config['args'] as $arg) {
+                if (is_string($arg) && (str_contains($arg, 'artisan') || str_contains($arg, 'testbench') || str_contains($arg, '/'))) {
+                    $needsUpdate = true;
                     break;
                 }
             }
-        }
-
-        // Ensure command is set (fallback)
-        if (! isset($config['command'])) {
-            $config['command'] = 'vendor/bin/testbench';
+            
+            if ($needsUpdate) {
+                // Keep only boost:mcp in args
+                $config['args'] = ['boost:mcp'];
+                $changed = true;
+            } elseif ($config['args'] !== ['boost:mcp']) {
+                // Ensure args is exactly ['boost:mcp']
+                $config['args'] = ['boost:mcp'];
+                $changed = true;
+            }
+        } else {
+            // If no args, set to ['boost:mcp']
+            $config['args'] = ['boost:mcp'];
             $changed = true;
         }
 
@@ -372,7 +382,7 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 $rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
 $rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
 $rewriteMcp(__DIR__.'/.gemini/settings.json', false);
-$rewriteMcp(__DIR__.'/.junie/mcp', false);
+$rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
 $rewriteMcp(__DIR__.'/.mcp.json', false);
 
 replaceInFiles($files, $replacements);
