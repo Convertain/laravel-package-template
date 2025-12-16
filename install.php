@@ -273,14 +273,12 @@ runCommand($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database 
 // Phase 2: Install Laravel Boost interactively, then fix MCP config for Testbench
 runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
 
-// Give editors time to write MCP config files before we attempt rewrites
-sleep(2);
-
 // Helper to rewrite MCP configs to use Testbench
 $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
     if ($waitForCreate && ! file_exists($path)) {
-        for ($i = 0; $i < 5; $i++) {
-            usleep(200000); // 200ms
+        // Retry up to 30 times with 100ms intervals (~3s total) for file creation
+        for ($i = 0; $i < 30; $i++) {
+            usleep(100000); // 100ms
             if (file_exists($path)) {
                 break;
             }
