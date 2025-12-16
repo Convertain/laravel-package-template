@@ -68,6 +68,26 @@ function replaceInFiles(array $files, array $replacements): void
     }
 }
 
+// Install Laravel Prompts for nice UI
+$dataDir = __DIR__.'/data';
+$dataVendorDir = $dataDir.'/vendor';
+
+if (! is_dir($dataVendorDir)) {
+    echo "Installing installer dependencies...\n";
+    runCommand('cd '.escapeshellarg($dataDir).' && composer install --no-dev --no-progress --quiet', 'Failed to install installer dependencies.');
+}
+
+// Load Laravel Prompts
+if (file_exists($dataVendorDir.'/autoload.php')) {
+    require $dataVendorDir.'/autoload.php';
+}
+
+// Display header
+echo "\n";
+echo str_repeat('=', 80)."\n";
+echo "  Laravel Package Template - Package Configurator\n";
+echo str_repeat('=', 80)."\n\n";
+
 $gitName = trim((string) shell_exec('git config user.name'));
 $gitEmail = trim((string) shell_exec('git config user.email'));
 
@@ -107,12 +127,41 @@ while (! array_key_exists($licenseChoice, $licenseOptions)) {
 
 $licenseIdentifier = $licenseOptions[$licenseChoice];
 
-$useConfig = confirm('Include config file?', true);
-$useRoutesWeb = confirm('Include web routes?', true);
-$useRoutesApi = confirm('Include API routes?', false);
-$useViews = confirm('Include views?', true);
-$useTranslations = confirm('Include translations?', true);
-$useMigrations = confirm('Include database migrations?', true);
+// Multi-select features
+echo "\nSelect features to include:\n";
+
+$selectedFeatures = function_exists('Laravel\\Prompts\\multiselect') 
+    ? \Laravel\Prompts\multiselect(
+        'Features',
+        [
+            'config' => 'Config file',
+            'routes_web' => 'Web routes',
+            'routes_api' => 'API routes',
+            'views' => 'Views',
+            'translations' => 'Translations',
+            'migrations' => 'Database migrations',
+        ],
+        ['config', 'routes_web', 'views', 'translations', 'migrations'],
+    )
+    : [];
+
+// Fallback to individual confirms if prompts not available
+if (empty($selectedFeatures)) {
+    $selectedFeatures = [];
+    if (confirm('Include config file?', true)) $selectedFeatures[] = 'config';
+    if (confirm('Include web routes?', true)) $selectedFeatures[] = 'routes_web';
+    if (confirm('Include API routes?', false)) $selectedFeatures[] = 'routes_api';
+    if (confirm('Include views?', true)) $selectedFeatures[] = 'views';
+    if (confirm('Include translations?', true)) $selectedFeatures[] = 'translations';
+    if (confirm('Include database migrations?', true)) $selectedFeatures[] = 'migrations';
+}
+
+$useConfig = in_array('config', $selectedFeatures);
+$useRoutesWeb = in_array('routes_web', $selectedFeatures);
+$useRoutesApi = in_array('routes_api', $selectedFeatures);
+$useViews = in_array('views', $selectedFeatures);
+$useTranslations = in_array('translations', $selectedFeatures);
+$useMigrations = in_array('migrations', $selectedFeatures);
 $installBoost = confirm('Install Laravel Boost?', true);
 
 $replacements = [

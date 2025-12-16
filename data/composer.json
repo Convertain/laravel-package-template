@@ -1,0 +1,12 @@
+{
+    "name": "laravel-package-template/installer",
+    "description": "Installer dependencies for Laravel package template",
+    "require": {
+        "laravel/prompts": "^0.2"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
