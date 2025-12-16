@@ -2,8 +2,8 @@
 
 [![Laravel 12.x](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
 [![PHP 8.2 - 8.5](https://img.shields.io/badge/PHP-8.2%20to%208.5-777BB4?style=flat-square&logo=php)](https://www.php.net)
-[![PHPStan Level 10](https://img.shields.io/badge/PHPStan-Level%2010-brightgreen?style=flat-square)](https://phpstan.org)
-[![Laravel Pint PSR-12](https://img.shields.io/badge/Laravel%20Pint-PSR--12-FF2D20?style=flat-square)](https://laravel.com/docs/pint)
+[![PHPStan](https://img.shields.io/badge/PHPStan-Level%200--10-brightgreen?style=flat-square)](https://phpstan.org)
+[![Laravel Pint](https://img.shields.io/badge/Laravel%20Pint-Configurable-FF2D20?style=flat-square)](https://laravel.com/docs/pint)
 [![Sponsor Convertain](https://img.shields.io/badge/Sponsor-Convertain-blue?style=flat-square&logo=github)](https://github.com/sponsors/Convertain)
 
 A modern, fully-featured Laravel package template that scaffolds a production-ready package with interactive configuration, integrated tooling, CI/CD pipelines, and Laravel Boost support.
@@ -11,7 +11,8 @@ A modern, fully-featured Laravel package template that scaffolds a production-re
 ## Features
 
 - **Interactive Installer**: Guided setup with choices for vendor name, package name, license, and optional features
-- **Modern Tooling**: [PHPStan](https://phpstan.org) Level 10, [Laravel Pint](https://laravel.com/docs/pint) PSR-12, [PHPUnit](https://phpunit.de) with [Orchestra Testbench](https://github.com/orchestraplatform/testbench)
+- **Configurable Tooling**: Choose your [PHPStan](https://phpstan.org) level (0-10) and [Laravel Pint](https://laravel.com/docs/pint) preset (laravel, psr12, per, symfony)
+- **Community Files**: Optional CONTRIBUTING.md, SECURITY.md, and GitHub issue templates
 - **MCP Configuration**: Automatic setup for VS Code, Cursor, Gemini, and Junie with [Laravel Boost](https://boost.laravel.com) MCP server
 - **Resource Management**: Selective inclusion of migrations, views, translations, routes, and publishable assets
 - **CI/CD Pipeline**: GitHub Actions workflow with linting, static analysis, and tests
@@ -41,13 +42,15 @@ Two ways to start:
 During installation you will be guided through:
 
 - Package name and vendor details
+- Author name and email
+- GitHub repository URL
 - License selection (MIT, Proprietary, Apache 2.0, or BSD-3-Clause)
-- Optional feature selection (migrations, views, translations, routes, publishable assets)
-- Composer dependency installation
-- Workbench setup
-- Database migrations
+- Feature selection (config, routes, views, translations, migrations)
+- Community files (CONTRIBUTING.md, SECURITY.md, issue templates)
+- PHPStan validation level (0-10)
+- Laravel Pint preset (laravel, psr12, per, symfony, empty)
 - Laravel Boost installation (optional, default yes)
-- MCP configuration updates (only if Boost installed)
+- Composer dependency installation and workbench setup
 - Code quality checks (lint and static analysis)
 
 **Start developing:**
@@ -62,7 +65,7 @@ composer serve  # Start the workbench app
 
 ```bash
 composer test      # Run the test suite with PHPUnit
-composer analyse   # Run PHPStan static analysis (Level 10)
+composer analyse   # Run PHPStan static analysis (configured level)
 composer lint      # Check and fix code style with Laravel Pint
 composer lint:fix  # Auto-fix code style issues
 ```
@@ -99,7 +102,7 @@ php artisan vendor:publish --tag=your-package-migrations
 | [PHP](https://www.php.net) | 8.2 - 8.5 | Language requirement | [Docs](https://www.php.net/docs.php) |
 | [Orchestra Testbench](https://github.com/orchestraplatform/testbench) | ^10 | Laravel package testing | [Docs](https://github.com/orchestraplatform/testbench) |
 | [PHPUnit](https://phpunit.de) | ^11 | Unit testing framework | [Docs](https://docs.phpunit.de) |
-| [PHPStan](https://phpstan.org) | ^2 (Level 10) | Static code analysis | [Docs](https://phpstan.org/user-guide/getting-started) |
+| [PHPStan](https://phpstan.org) | ^2 (Level 0-10) | Static code analysis | [Docs](https://phpstan.org/user-guide/getting-started) |
 | [Larastan](https://github.com/larastan/larastan) | ^3 | Laravel-aware PHPStan | [Docs](https://github.com/larastan/larastan) |
 | [Laravel Pint](https://laravel.com/docs/pint) | ^1.14 | Code style formatter | [Docs](https://laravel.com/docs/pint) |
 | [Laravel Boost](https://boost.laravel.com) | ^1.0 | Development enhancement | [Docs](https://boost.laravel.com) |
@@ -129,9 +132,11 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 ## Directory Structure
 
 ```text
+├── .github/
+│   ├── ISSUE_TEMPLATE/          # Bug report & feature request templates
+│   └── workflows/               # CI/CD GitHub Actions
 ├── config/                      # Package configuration files
 ├── data/                        # Template resources (removed after install)
-├── lang/                        # Translation files
 ├── src/
 │   ├── Contracts/               # Package interfaces
 │   ├── Services/                # Core service classes
@@ -144,6 +149,8 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 │   └── TestCase.php
 ├── workbench/                   # Development/testing app (created by installer)
 ├── composer.json
+├── CONTRIBUTING.md              # Contribution guidelines (optional)
+├── SECURITY.md                  # Security policy (optional)
 ├── phpstan.neon.dist
 ├── phpunit.xml.dist
 ├── pint.json
@@ -155,7 +162,7 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 The repository includes a GitHub Actions workflow that:
 
 1. Validates code style with Laravel Pint
-2. Performs static analysis with PHPStan Level 10
+2. Performs static analysis with PHPStan (at your configured level)
 3. Runs the test suite with PHPUnit
 4. Runs on pull requests and pushes to main branches
 

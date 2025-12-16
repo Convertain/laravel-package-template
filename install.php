@@ -204,9 +204,9 @@ if ($usePromptsForm) {
             ->select(
                 label: 'PHPStan validation level',
                 options: [
-                    '10' => 'Level 10 - Strictest (recommended)',
+                    '10' => 'Level 10 - Strictest',
                     '9' => 'Level 9 - Very strict',
-                    '8' => 'Level 8 - Report nullable types',
+                    '8' => 'Level 8 - Report nullable types (recommended)',
                     '7' => 'Level 7 - Union types',
                     '6' => 'Level 6 - Check missing typehints',
                     '5' => 'Level 5 - Check argument types',
@@ -223,13 +223,13 @@ if ($usePromptsForm) {
             ->select(
                 label: 'Laravel Pint preset',
                 options: [
-                    'psr12' => 'PSR-12 (recommended)',
-                    'laravel' => 'Laravel',
+                    'psr12' => 'PSR-12',
+                    'laravel' => 'Laravel  (recommended)',
                     'per' => 'PER Coding Style',
                     'symfony' => 'Symfony',
                     'empty' => 'Empty (no rules)',
                 ],
-                default: 'psr12',
+                default: 'laravel',
                 hint: 'Code style standard for formatting',
                 name: 'pint_preset',
             )
@@ -240,14 +240,6 @@ if ($usePromptsForm) {
                 no: 'No',
                 hint: 'AI-powered development tools for your IDE',
                 name: 'install_boost',
-            )
-            ->confirm(
-                label: 'Remove install.php after setup?',
-                default: true,
-                yes: 'Yes',
-                no: 'No',
-                hint: 'Recommended: remove the installer for a clean package',
-                name: 'remove_installer',
             )
             ->submit();
         
@@ -265,7 +257,6 @@ if ($usePromptsForm) {
         $phpstanLevel = $responses['phpstan_level'];
         $pintPreset = $responses['pint_preset'];
         $installBoost = $responses['install_boost'];
-        $removeInstaller = $responses['remove_installer'];
         
         // Derive slugs
         $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
@@ -300,7 +291,6 @@ if ($usePromptsForm) {
                 ['PHPStan Level', $phpstanLevel],
                 ['Pint Preset', $pintPreset],
                 ['Install Boost', $installBoost ? 'Yes' : 'No'],
-                ['Remove Installer', $removeInstaller ? 'Yes' : 'No'],
             ],
         );
         echo "\n";
@@ -387,7 +377,6 @@ if ($usePromptsForm) {
     }
     
     $installBoost = confirm('Install Laravel Boost?', true);
-    $removeInstaller = confirm('Remove install.php after setup?', true);
 }
 
 // Extract feature flags
@@ -882,10 +871,8 @@ if (is_dir(__DIR__.'/.git')) {
     }
 }
 
-// Remove installer if previously confirmed
-if (isset($removeInstaller) && $removeInstaller) {
-    unlink(__FILE__);
-}
+// Remove installer (it cannot be re-run after setup completes)
+unlink(__FILE__);
 
 // Run composer lint and analyse
 echo "\n".str_repeat('=', 80)."\n";
