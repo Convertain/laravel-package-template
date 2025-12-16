@@ -183,7 +183,7 @@ if ($usePromptsForm) {
             ->multiselect(
                 label: 'Features to include',
                 options: $featureOptions,
-                default: ['config', 'routes_web', 'views', 'translations', 'migrations'],
+                default: ['config', 'routes_web', 'views', 'migrations'],
                 hint: 'Select the scaffolding components you need (Space to toggle)',
                 name: 'features',
             )
@@ -304,7 +304,7 @@ if ($usePromptsForm) {
     echo "\nSelect features (answer y/n for each):\n";
     $selectedFeatures = [];
     foreach ($featureOptions as $key => $label) {
-        $default = in_array($key, ['config', 'routes_web', 'views', 'translations', 'migrations']);
+        $default = in_array($key, ['config', 'routes_web', 'views', 'migrations']);
         if (confirm("Include {$label}?", $default)) {
             $selectedFeatures[] = $key;
         }
