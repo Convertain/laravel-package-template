@@ -91,33 +91,104 @@ echo str_repeat('=', 80)."\n\n";
 $gitName = trim((string) shell_exec('git config user.name'));
 $gitEmail = trim((string) shell_exec('git config user.email'));
 
-$vendor = ask('Vendor name', 'Convertain');
-$defaultPackageSlug = slugify(basename(getcwd()));
-$package = ask('Package name (slug-friendly)', $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name');
-$packageDescription = ask('Package description', 'This package does something awesome.');
+// Use Prompts for nice text inputs if available
+$usePrompts = function_exists('Laravel\\Prompts\\text');
 
-$vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
-$packageSlug = slugify($package !== '' ? $package : 'package-name');
-$namespace = ask('Base namespace', studly($vendor).'\\'.studly($package));
-$providerClass = studly($package).'ServiceProvider';
+if ($usePrompts) {
+    $vendor = \Laravel\Prompts\text(
+        label: 'Vendor name',
+        default: 'Convertain',
+        required: true,
+    );
+    
+    $defaultPackageSlug = slugify(basename(getcwd()));
+    $package = \Laravel\Prompts\text(
+        label: 'Package name (slug-friendly)',
+        default: $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name',
+        required: true,
+    );
+    
+    $packageDescription = \Laravel\Prompts\text(
+        label: 'Package description',
+        default: 'This package does something awesome.',
+    );
+    
+    $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
+    $packageSlug = slugify($package !== '' ? $package : 'package-name');
+    
+    $namespace = \Laravel\Prompts\text(
+        label: 'Base namespace',
+        default: studly($vendor).'\\'.studly($package),
+        required: true,
+    );
+    
+    $providerClass = studly($package).'ServiceProvider';
+    
+    $authorName = \Laravel\Prompts\text(
+        label: 'Author name',
+        default: $gitName !== '' ? $gitName : 'Author Name',
+    );
+    
+    $authorEmail = \Laravel\Prompts\text(
+        label: 'Author email',
+        default: $gitEmail !== '' ? $gitEmail : 'support@example.com',
+    );
+    
+    $githubUrl = \Laravel\Prompts\text(
+        label: 'GitHub repository URL',
+        default: "https://github.com/{$vendorSlug}/{$packageSlug}",
+    );
+    
+    $licenseOptions = [
+        'MIT' => 'MIT',
+        'Proprietary' => 'proprietary',
+        'Apache-2.0' => 'Apache-2.0',
+        'BSD-3-Clause' => 'BSD-3-Clause',
+    ];
+    
+    $licenseChoice = \Laravel\Prompts\select(
+        label: 'License',
+        options: $licenseOptions,
+        default: 'Proprietary',
+    );
+} else {
+    // Fallback to readline-based asks
+    $vendor = ask('Vendor name', 'Convertain');
+    $defaultPackageSlug = slugify(basename(getcwd()));
+    $package = ask('Package name (slug-friendly)', $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name');
+    $packageDescription = ask('Package description', 'This package does something awesome.');
+    
+    $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
+    $packageSlug = slugify($package !== '' ? $package : 'package-name');
+    $namespace = ask('Base namespace', studly($vendor).'\\'.studly($package));
+    $providerClass = studly($package).'ServiceProvider';
+    
+    $authorName = ask('Author name', 'Convertain Limited');
+    $authorEmail = ask('Author email', 'support@convertain.com');
+    $githubUrl = ask('GitHub repository URL', "https://github.com/{$vendorSlug}/{$packageSlug}");
+    
+    $licenseOptions = [
+        'MIT' => 'MIT',
+        'Proprietary' => 'proprietary',
+        'Apache-2.0' => 'Apache-2.0',
+        'BSD-3-Clause' => 'BSD-3-Clause',
+    ];
+    
+    $licenseChoice = ask(
+        'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
+        'Proprietary',
+    );
+    
+    while (! array_key_exists($licenseChoice, $licenseOptions)) {
+        echo 'Invalid choice. Please enter one of: '.implode(', ', array_keys($licenseOptions)).PHP_EOL;
+        $licenseChoice = ask(
+            'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
+            'MIT',
+        );
+    }
+}
 
-$authorName = ask('Author name', 'Convertain Limited');
-$authorEmail = ask('Author email', 'support@convertain.com');
-$githubUrl = ask('GitHub repository URL', "https://github.com/{$vendorSlug}/{$packageSlug}");
-
-$licenseOptions = [
-    'MIT' => 'MIT',
-    'Proprietary' => 'proprietary',
-    'Apache-2.0' => 'Apache-2.0',
-    'BSD-3-Clause' => 'BSD-3-Clause',
-];
-
-$licenseChoice = ask(
-    'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
-    'Proprietary',
-);
-
-while (! array_key_exists($licenseChoice, $licenseOptions)) {
+if (! array_key_exists($licenseChoice, $licenseOptions)) {
     echo 'Invalid choice. Please enter one of: '.implode(', ', array_keys($licenseOptions)).PHP_EOL;
     $licenseChoice = ask(
         'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
@@ -132,8 +203,8 @@ echo "\nSelect features to include:\n";
 
 $selectedFeatures = function_exists('Laravel\\Prompts\\multiselect') 
     ? \Laravel\Prompts\multiselect(
-        'Features',
-        [
+        label: 'Features',
+        options: [
             'config' => 'Config file',
             'routes_web' => 'Web routes',
             'routes_api' => 'API routes',
@@ -141,7 +212,8 @@ $selectedFeatures = function_exists('Laravel\\Prompts\\multiselect')
             'translations' => 'Translations',
             'migrations' => 'Database migrations',
         ],
-        ['config', 'routes_web', 'views', 'translations', 'migrations'],
+        default: ['config', 'routes_web', 'views', 'translations', 'migrations'],
+        required: true,
     )
     : [];
 
