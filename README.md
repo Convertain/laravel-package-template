@@ -11,7 +11,7 @@ This repository is a starter template for building Convertain Laravel packages. 
    - Tests: `composer test`
    - Static analysis: `composer analyse`
    - Code style: `composer lint`
-   - Workbench app: `composer workbench`
+   - Workbench app: `vendor/bin/testbench workbench:serve` (available after configure)
 
 ## After configuration
 
@@ -31,7 +31,6 @@ This repository is a starter template for building Convertain Laravel packages. 
 - `composer test` — run the test suite.
 - `composer analyse` — run PHPStan.
 - `composer lint` — run Pint.
-- `composer workbench` — boot the workbench Laravel app.
 
 ## License
 

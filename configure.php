@@ -271,6 +271,39 @@ runCommand($testbenchBinary.' boost:install --no-interaction --ansi', 'Boost ins
 
 replaceInFiles($files, $replacements);
 
+// Build package README from template if present
+$readmeTemplate = __DIR__.'/README.package.md';
+if (file_exists($readmeTemplate)) {
+    $content = (string) file_get_contents($readmeTemplate);
+
+    // Apply simple replacements
+    $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+    // Conditional sections handling
+    $flags = [
+        'config' => $useConfig,
+        'routes' => ($useRoutesWeb || $useRoutesApi),
+        'routes_web' => $useRoutesWeb,
+        'routes_api' => $useRoutesApi,
+        'views' => $useViews,
+        'translations' => $useTranslations,
+        'migrations' => $useMigrations,
+    ];
+
+    foreach ($flags as $key => $enabled) {
+        $pattern = sprintf('/<!--\\s*IF:%s\\s*-->[\\s\\S]*?<!--\\s*ENDIF:%s\\s*-->/', preg_quote($key, '/'), preg_quote($key, '/'));
+        if (! $enabled) {
+            $content = (string) preg_replace($pattern, '', $content);
+        } else {
+            // Remove the markers but keep the content
+            $content = (string) preg_replace(['/' . sprintf('<!--\\s*IF:%s\\s*-->', preg_quote($key, '/')) . '/', '/' . sprintf('<!--\\s*ENDIF:%s\\s*-->', preg_quote($key, '/')) . '/'], '', $content);
+        }
+    }
+
+    file_put_contents(__DIR__.'/README.md', $content);
+    @unlink($readmeTemplate);
+}
+
 $year = date('Y');
 
 if ($licenseChoice === 'MIT') {
