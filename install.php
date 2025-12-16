@@ -128,6 +128,7 @@ $replacements = [
     'package-template' => $packageSlug,
     'PackageServiceProvider' => $providerClass,
     ':package_namespace' => $namespace,
+    'github: Convertain' => 'github: '.$vendorSlug,
 ];
 
 $composerPath = __DIR__.'/composer.json';
