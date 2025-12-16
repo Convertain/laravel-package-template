@@ -113,6 +113,7 @@ $useRoutesApi = confirm('Include API routes?', false);
 $useViews = confirm('Include views?', true);
 $useTranslations = confirm('Include translations?', true);
 $useMigrations = confirm('Include database migrations?', true);
+$installBoost = confirm('Install Laravel Boost?', true);
 
 $replacements = [
     ':vendor_slug' => $vendorSlug,
@@ -290,7 +291,9 @@ runCommand($testbenchBinary.' workbench:install --no-interaction --ansi', 'Workb
 runCommand($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
 
 // Phase 2: Install Laravel Boost interactively, then fix MCP config for Testbench
-runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
+if ($installBoost) {
+    runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
+}
 
 // Helper to rewrite MCP configs to use Testbench
 $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
@@ -386,12 +389,16 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
     }
 };
 
-// Update VS Code (wait for file creation), Cursor, Gemini, Junie, and generic .mcp.json if present
-$rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
-$rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
-$rewriteMcp(__DIR__.'/.gemini/settings.json', false);
-$rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
-$rewriteMcp(__DIR__.'/.mcp.json', false);
+if ($installBoost) {
+    // Update VS Code (wait for file creation), Cursor, Gemini, Junie, and generic .mcp.json if present
+    $rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
+    $rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
+    $rewriteMcp(__DIR__.'/.gemini/settings.json', false);
+    $rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
+    $rewriteMcp(__DIR__.'/.mcp.json', false);
+} else {
+    echo "Skipped Laravel Boost installation; MCP configs were not modified.".PHP_EOL;
+}
 
 replaceInFiles($files, $replacements);
 

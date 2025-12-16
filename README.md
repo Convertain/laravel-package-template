@@ -46,8 +46,8 @@ During installation you will be guided through:
 - Composer dependency installation
 - Workbench setup
 - Database migrations
-- Laravel Boost installation
-- MCP configuration updates
+- Laravel Boost installation (optional, default yes)
+- MCP configuration updates (only if Boost installed)
 - Code quality checks (lint and static analysis)
 
 **Start developing:**
