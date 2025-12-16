@@ -73,8 +73,9 @@ composer test && composer lint && composer analyse
 | File | Purpose |
 |------|---------|
 | `install.php` | Interactive installer script |
+| `composer.json` | Template for the generated package's composer.json |
 | `data/` | Template files copied during installation |
-| `data/composer.json` | Template for the generated composer.json |
+| `data/composer.json` | Dependencies for the installer (Laravel Prompts) |
 | `data/Provider.php.txt` | Template for the service provider |
 | `data/licenses/` | License file templates |
 | `data/github/` | GitHub workflow and issue templates |
