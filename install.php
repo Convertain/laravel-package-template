@@ -199,10 +199,25 @@ if (is_dir($routesDir) && count(glob($routesDir.'/*')) === 0) {
     @rmdir($routesDir);
 }
 
+$removeDirIfEmpty = function (string $dir): void {
+    if (! is_dir($dir)) {
+        return;
+    }
+    $entries = @scandir($dir);
+    if ($entries === false) {
+        return;
+    }
+    $nonDots = array_diff($entries, ['.', '..']);
+    if (count($nonDots) === 0) {
+        @rmdir($dir);
+    }
+};
+
 $viewsDir = __DIR__.'/resources/views';
 if (! $useViews && is_dir($viewsDir)) {
     passthru('rm -rf '.escapeshellarg($viewsDir));
 }
+$removeDirIfEmpty(__DIR__.'/resources');
 
 $langDir = __DIR__.'/lang';
 if (! $useTranslations && is_dir($langDir)) {
@@ -213,6 +228,10 @@ $migrationsDir = __DIR__.'/database/migrations';
 if (! $useMigrations && is_dir($migrationsDir)) {
     passthru('rm -rf '.escapeshellarg($migrationsDir));
 }
+$removeDirIfEmpty(__DIR__.'/database');
+
+$configDir = __DIR__.'/config';
+$removeDirIfEmpty($configDir);
 
 // Build Service Provider from template with conditional sections
 $providerTemplatePath = __DIR__.'/data/Provider.php.txt';
