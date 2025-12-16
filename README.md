@@ -157,7 +157,7 @@ Branches: `master`, `1.x`
 
 ## License
 
-This template defaults to the MIT License. You can choose a different license during installation:
+This template defaults to a Proprietary license. You can choose a different license during installation:
 
 - MIT
 - Proprietary
