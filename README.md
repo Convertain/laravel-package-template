@@ -10,7 +10,7 @@ A modern, fully-featured Laravel package template that scaffolds a production-re
 
 ## Features
 
-- **Interactive Installer**: Guided setup with choices for vendor name, package name, license, and optional features
+- **Interactive Installer**: Guided setup with spinner-based progress display and CTRL+U go-back support
 - **Configurable Tooling**: Choose your [PHPStan](https://phpstan.org) level (0-10) and [Laravel Pint](https://laravel.com/docs/pint) preset (laravel, psr12, per, symfony)
 - **Community Files**: Optional CONTRIBUTING.md, SECURITY.md, and GitHub issue templates
 - **MCP Configuration**: Automatic setup for VS Code, Cursor, Gemini, and Junie with [Laravel Boost](https://boost.laravel.com) MCP server
