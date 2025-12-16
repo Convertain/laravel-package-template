@@ -275,6 +275,16 @@ runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
 
 // Ensure .vscode/mcp.json uses vendor/bin/testbench for package context
 $mcpPath = __DIR__.'/.vscode/mcp.json';
+// VS Code writes MCP config asynchronously; wait a bit if file not present yet
+if (! file_exists($mcpPath)) {
+    // Try up to ~1s total (5 * 200ms)
+    for ($i = 0; $i < 5; $i++) {
+        usleep(200000);
+        if (file_exists($mcpPath)) {
+            break;
+        }
+    }
+}
 if (file_exists($mcpPath)) {
     $json = file_get_contents($mcpPath);
     if ($json !== false) {
