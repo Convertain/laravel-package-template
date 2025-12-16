@@ -605,7 +605,12 @@ if (is_dir(__DIR__.'/.git')) {
     }
 }
 
-if (confirm('Remove install.php after setup?', true)) {
+// Remove installer confirmation with styled prompt when available
+$removeInstaller = function_exists('Laravel\\Prompts\\confirm')
+    ? \Laravel\Prompts\confirm('Remove install.php after setup?', default: true)
+    : confirm('Remove install.php after setup?', true);
+
+if ($removeInstaller) {
     unlink(__FILE__);
 }
 
