@@ -72,7 +72,8 @@ $gitName = trim((string) shell_exec('git config user.name'));
 $gitEmail = trim((string) shell_exec('git config user.email'));
 
 $vendor = ask('Vendor name', 'Convertain');
-$package = ask('Package name (slug-friendly)', 'laravel-package-name');
+$defaultPackageSlug = slugify(basename(getcwd()));
+$package = ask('Package name (slug-friendly)', $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name');
 $packageDescription = ask('Package description', 'This package does something awesome.');
 
 $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
@@ -218,28 +219,28 @@ $providerContent = "<?php\n\n".
     "{\n".
     "    public function register(): void\n".
     "    {\n".
-    ($useConfig ? "        \$this->mergeConfigFrom(\n            __DIR__.'/../config/{$packageSlug}.php',\n            '{$packageSlug}',\n        );\n" : '').
+    ($useConfig ? "        \\$this->mergeConfigFrom(\n            __DIR__.'/../config/{$packageSlug}.php',\n            '{$packageSlug}',\n        );\n" : '').
     "    }\n\n".
     "    public function boot(): void\n".
     "    {\n".
-    ($useRoutesWeb || $useRoutesApi ? "        \$this->registerRoutes();\n" : '').
-    ($useViews ? "        \$this->registerViews();\n" : '').
-    ($useTranslations ? "        \$this->registerTranslations();\n" : '').
-    ($useMigrations ? "        \$this->registerMigrations();\n" : '').
-    ($useConfig || $useViews || $useTranslations || $useMigrations ? "        \$this->registerPublishing();\n" : '').
+    ($useRoutesWeb || $useRoutesApi ? "        \\$this->registerRoutes();\n" : '').
+    ($useViews ? "        \\$this->registerViews();\n" : '').
+    ($useTranslations ? "        \\$this->registerTranslations();\n" : '').
+    ($useMigrations ? "        \\$this->registerMigrations();\n" : '').
+    ($useConfig || $useViews || $useTranslations || $useMigrations ? "        \\$this->registerPublishing();\n" : '').
     "    }\n\n".
     ($useRoutesWeb || $useRoutesApi ? "    protected function registerRoutes(): void\n    {\n".
-        ($useRoutesWeb ? "        if (file_exists(__DIR__.'/../routes/web.php')) {\n            \$this->loadRoutesFrom(__DIR__.'/../routes/web.php');\n        }\n\n" : '').
-        ($useRoutesApi ? "        if (file_exists(__DIR__.'/../routes/api.php')) {\n            \$this->loadRoutesFrom(__DIR__.'/../routes/api.php');\n        }\n" : '').
+        ($useRoutesWeb ? "        if (file_exists(__DIR__.'/../routes/web.php')) {\n            \\$this->loadRoutesFrom(__DIR__.'/../routes/web.php');\n        }\n\n" : '').
+        ($useRoutesApi ? "        if (file_exists(__DIR__.'/../routes/api.php')) {\n            \\$this->loadRoutesFrom(__DIR__.'/../routes/api.php');\n        }\n" : '').
     "    }\n\n" : '').
-    ($useViews ? "    protected function registerViews(): void\n    {\n        if (is_dir(__DIR__.'/../resources/views')) {\n            \$this->loadViewsFrom(__DIR__.'/../resources/views', '{$packageSlug}');\n        }\n    }\n\n" : '').
-    ($useTranslations ? "    protected function registerTranslations(): void\n    {\n        if (is_dir(__DIR__.'/../lang')) {\n            \$this->loadTranslationsFrom(__DIR__.'/../lang', '{$packageSlug}');\n            \$this->loadJsonTranslationsFrom(__DIR__.'/../lang');\n        }\n    }\n\n" : '').
-    ($useMigrations ? "    protected function registerMigrations(): void\n    {\n        if (is_dir(__DIR__.'/../database/migrations')) {\n            \$this->loadMigrationsFrom(__DIR__.'/../database/migrations');\n        }\n    }\n\n" : '').
-    ($useConfig || $useViews || $useTranslations || $useMigrations ? "    protected function registerPublishing(): void\n    {\n        if (! \$this->app->runningInConsole()) {\n            return;\n        }\n\n".
-        ($useConfig ? "        if (file_exists(__DIR__.'/../config/{$packageSlug}.php')) {\n            \$this->publishes([\n                __DIR__.'/../config/{$packageSlug}.php' => config_path('{$packageSlug}.php'),\n            ], '{$packageSlug}-config');\n        }\n\n" : '').
-        ($useViews ? "        if (is_dir(__DIR__.'/../resources/views')) {\n            \$this->publishes([\n                __DIR__.'/../resources/views' => resource_path('views/vendor/{$packageSlug}'),\n            ], '{$packageSlug}-views');\n        }\n\n" : '').
-        ($useTranslations ? "        if (is_dir(__DIR__.'/../lang')) {\n            \$targetLangPath = method_exists(\$this->app, 'langPath')\n                ? \$this->app->langPath('vendor/{$packageSlug}')\n                : resource_path('lang/vendor/{$packageSlug}');\n\n            \$this->publishes([\n                __DIR__.'/../lang' => \$targetLangPath,\n            ], '{$packageSlug}-lang');\n        }\n\n" : '').
-        ($useMigrations ? "        if (is_dir(__DIR__.'/../database/migrations')) {\n            \$this->publishes([\n                __DIR__.'/../database/migrations' => database_path('migrations'),\n            ], '{$packageSlug}-migrations');\n        }\n" : '').
+    ($useViews ? "    protected function registerViews(): void\n    {\n        if (is_dir(__DIR__.'/../resources/views')) {\n            \\$this->loadViewsFrom(__DIR__.'/../resources/views', '{$packageSlug}');\n        }\n    }\n\n" : '').
+    ($useTranslations ? "    protected function registerTranslations(): void\n    {\n        if (is_dir(__DIR__.'/../lang')) {\n            \\$this->loadTranslationsFrom(__DIR__.'/../lang', '{$packageSlug}');\n            \\$this->loadJsonTranslationsFrom(__DIR__.'/../lang');\n        }\n    }\n\n" : '').
+    ($useMigrations ? "    protected function registerMigrations(): void\n    {\n        if (is_dir(__DIR__.'/../database/migrations')) {\n            \\$this->loadMigrationsFrom(__DIR__.'/../database/migrations');\n        }\n    }\n\n" : '').
+    ($useConfig || $useViews || $useTranslations || $useMigrations ? "    protected function registerPublishing(): void\n    {\n        if (! \\$this->app->runningInConsole()) {\n            return;\n        }\n\n".
+        ($useConfig ? "        if (file_exists(__DIR__.'/../config/{$packageSlug}.php')) {\n            \\$this->publishes([\n                __DIR__.'/../config/{$packageSlug}.php' => config_path('{$packageSlug}.php'),\n            ], '{$packageSlug}-config');\n        }\n\n" : '').
+        ($useViews ? "        if (is_dir(__DIR__.'/../resources/views')) {\n            \\$this->publishes([\n                __DIR__.'/../resources/views' => resource_path('views/vendor/{$packageSlug}'),\n            ], '{$packageSlug}-views');\n        }\n\n" : '').
+        ($useTranslations ? "        if (is_dir(__DIR__.'/../lang')) {\n            \\$targetLangPath = method_exists(\$this->app, 'langPath')\n                ? \\$this->app->langPath('vendor/{$packageSlug}')\n                : resource_path('lang/vendor/{$packageSlug}');\n\n            \\$this->publishes([\n                __DIR__.'/../lang' => \\$targetLangPath,\n            ], '{$packageSlug}-lang');\n        }\n\n" : '').
+        ($useMigrations ? "        if (is_dir(__DIR__.'/../database/migrations')) {\n            \\$this->publishes([\n                __DIR__.'/../database/migrations' => database_path('migrations'),\n            ], '{$packageSlug}-migrations');\n        }\n" : '').
     "    }\n" : '').
     "}\n";
 
@@ -268,8 +269,27 @@ $testbenchBinary = __DIR__.'/vendor/bin/testbench';
 runCommand($testbenchBinary.' workbench:install --no-interaction --ansi', 'Workbench install failed.');
 runCommand($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
 
-// Phase 2: Interactive Boost setup via Artisan command (now that workbench is available)
-runCommand($testbenchBinary.' boost:setup --ansi', 'Boost setup failed.');
+// Phase 2: Install Laravel Boost interactively, then fix MCP config for Testbench
+runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
+
+// Ensure .vscode/mcp.json uses vendor/bin/testbench for package context
+$mcpPath = __DIR__.'/.vscode/mcp.json';
+if (file_exists($mcpPath)) {
+    $json = file_get_contents($mcpPath);
+    if ($json !== false) {
+        $data = json_decode($json, true);
+        if (is_array($data) && isset($data['clients']) && is_array($data['clients'])) {
+            foreach ($data['clients'] as &$client) {
+                if (isset($client['command'])) {
+                    $client['command'] = 'vendor/bin/testbench';
+                    $client['args'] = [];
+                }
+            }
+            file_put_contents($mcpPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+            echo 'Updated .vscode/mcp.json to use vendor/bin/testbench.'.PHP_EOL;
+        }
+    }
+}
 
 replaceInFiles($files, $replacements);
 
@@ -406,7 +426,7 @@ file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
 
 runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
 
-if (confirm('Remove configure.php after setup?', true)) {
+if (confirm('Remove install.php after setup?', true)) {
     unlink(__FILE__);
 }
 
