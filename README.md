@@ -183,6 +183,20 @@ See [LICENSE.md](LICENSE.md) for the selected license details.
 
 For issues or questions about the template, please open an issue on this repository.
 
+## Credits & Sponsorship
+
+If you use this template for your Laravel package, we'd love it if you:
+
+⭐ **Star this repository** — It helps others discover it!
+
+📝 **Credit the template** — Add a note to your README:
+
+```markdown
+Built using [Laravel Package Template](https://github.com/Convertain/laravel-package-template)
+```
+
+💖 **Consider sponsoring** — If this template saved you time, consider [sponsoring the maintainers](https://github.com/sponsors/Convertain) to support continued development.
+
 ---
 
 Made with ❤️ by [Convertain](https://github.com/Convertain)
