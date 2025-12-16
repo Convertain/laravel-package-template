@@ -7,11 +7,6 @@ parameters:
 
     tmpDir: build/phpstan
 
-    checkMissingIterableValueType: true
-    checkGenericClassInNonGenericObjectType: true
+    treatPhpDocTypesAsCertain: false
 
-    treatPhpDocTypesAsCertain: true
-    reportUnmatchedIgnoredErrors: true
-
-    ignoreErrors:
-        - '#Unsafe usage of new static#'
+    ignoreErrors: []
