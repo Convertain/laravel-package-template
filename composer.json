@@ -1,86 +1,50 @@
 {
-    "name": "convertain/laravel-package-template",
-    "description": "Package scaffold template for Convertain Laravel packages",
-    "keywords": [
-        "convertain",
-        "laravel",
-        "package-template"
-    ],
-    "homepage": "https://github.com/convertain/laravel-package-template",
-    "license": "proprietary",
-    "authors": [
-        {
-            "name": "Christian Rauchenwald",
-            "email": "christian@convertain.com",
-            "role": "Developer"
-        }
-    ],
+    "name": ":vendor_slug/:package_slug",
+    "description": ":package_description",
+    "type": "library",
+    "license": ":license",
     "require": {
-        "php": "^8.2",
-        "illuminate/contracts": "^12.0",
+        "php": "^8.2|^8.3|^8.4|^8.5",
         "illuminate/support": "^12.0"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
-        "nunomaduro/collision": "^8.1",
-        "larastan/larastan": "^3.0",
-        "orchestra/testbench": "^10.0",
-        "pestphp/pest": "^3.0",
-        "pestphp/pest-plugin-arch": "^3.0",
-        "pestphp/pest-plugin-laravel": "^3.0",
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^2.0",
         "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0",
-        "barryvdh/laravel-ide-helper": "^3.5"
+        "nunomaduro/larastan": "^3.0",
+        "laravel/pint": "^1.14",
+        "laravel/boost": "^1.0",
+        "workbench/workbench": "^2.0"
     },
     "autoload": {
         "psr-4": {
-            "Convertain\\PackageTemplate\\": "src/",
-            "Convertain\\PackageTemplate\\Database\\Factories\\": "database/factories/"
+            "Vendor\\Package\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Convertain\\PackageTemplate\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/",
-            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
-            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
-        }
-    },
-    "scripts": {
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "build": "@php vendor/bin/testbench workbench:build --ansi",
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@build",
-            "@php vendor/bin/testbench serve --ansi"
-        ],
-        "lint": [
-            "@php vendor/bin/pint --ansi",
-            "@php vendor/bin/phpstan analyse --verbose --ansi --memory-limit 10G"
-        ],
-        "test": "@php vendor/bin/pest --coverage --min=100",
-        "test-coverage": "@php vendor/bin/pest --coverage-html coverage --min=100"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "phpstan/extension-installer": true
+            "Vendor\\Package\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Convertain\\PackageTemplate\\PackageTemplateServiceProvider"
+                "Vendor\\Package\\PackageServiceProvider"
             ]
         }
     },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "pint",
+        "analyse": "phpstan analyse"
+    },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
+    }
 }

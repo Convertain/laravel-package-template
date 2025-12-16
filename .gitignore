@@ -1,23 +1,35 @@
+# Dependencies & vendors
 /vendor
 /node_modules
-/.idea
-/.vscode
-/.vagrant
-/.phpunit.cache
-/phpunit.xml
-/.phpunit.result.cache
-/.php-cs-fixer.cache
-/.php_cs.cache
 /composer.lock
 /package-lock.json
 /yarn.lock
+
+# IDE & tooling
+/.idea
+/.vscode
+/.phpunit.cache
+/.phpunit.result.cache
+/.php-cs-fixer.cache
+/.php_cs.cache
+/.php-cs-fixer.php
+/.phpstan
+
+# Environment
 .env
 .env.backup
 .env.production
+
+# Output & cache
+/coverage
+/build
+/storage
+/bootstrap/cache
+
+# System files
 .DS_Store
 Thumbs.db
 *.log
-coverage
-.phpstan
-build
-.php-cs-fixer.php
+
+# Local overrides
+phpunit.xml

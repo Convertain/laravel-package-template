@@ -1,41 +1,17 @@
 parameters:
-    level: 7
+    level: 10
+
     paths:
         - src
-        - config
         - tests
-    excludePaths:
-        - vendor
-        - storage
-        - bootstrap/cache
+
+    tmpDir: build/phpstan
+
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+
+    treatPhpDocTypesAsCertain: true
+    reportUnmatchedIgnoredErrors: true
 
     ignoreErrors:
-        # Ignore errors for test files
-        - identifier: missingType.iterableValue
-        - identifier: missingType.generics
-        # Ignore Pest-specific issues
-        -
-            message: '#Undefined variable: \$this#'
-            paths:
-                - tests/Pest.php
-        -
-            message: '#Variable \$this in PHPDoc tag @var does not exist#'
-            paths:
-                - tests/Pest.php
-        # Ignore Mockery-specific issues
-        -
-            message: '#Call to an undefined method Mockery#'
-            paths:
-                - tests/*
-        # Ignore static return type issues in traits (PHPStan limitation)
-        -
-            message: '#Method .+::findByPublicId\(\) should return static\(.+\)\|null but returns .+\|null#'
-            paths:
-                - src/Traits/*
-        -
-            message: '#Method .+::findByPublicIdOrFail\(\) should return static\(.+\) but returns .+#'
-            paths:
-                - src/Traits/*
-
-    reportUnmatchedIgnoredErrors: false
-    treatPhpDocTypesAsCertain: true
+        - '#Unsafe usage of new static#'

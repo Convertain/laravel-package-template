@@ -1,149 +1,38 @@
 # Laravel Package Template
 
-This is a scaffold template for creating Convertain Laravel packages with standardized structure, testing, and CI/CD.
+This repository is a starter template for building Convertain Laravel packages. Run the configurator to replace placeholders and bootstrap a new package quickly.
 
-## Features
+## Quick start
 
-- 🚀 Laravel 12.x & PHP 8.4+ support
-- 🔑 UUID/ULID public identifiers with integer primary keys
-- 🧩 Runtime package detection and integration
-- 🎨 FluxUI component integration
-- ✅ 100% test coverage requirement
-- 🔍 PHPStan Level 10 static analysis
-- 🎯 Laravel Pint code formatting (PSR-12)
-- 🔄 GitHub Actions CI/CD pipelines
-- 📦 Automatic Packagist releases
+1. Clone the template: `git clone git@github.com:Convertain/laravel-package-template.git your-package-name`
+2. Install dependencies: `composer install`
+3. Configure it: `php configure.php` (runs workbench install, migrates, and installs Boost)
+4. Run checks:
+   - Tests: `composer test`
+   - Static analysis: `composer analyse`
+   - Code style: `composer lint`
+   - Workbench app: `composer workbench`
 
-## Installation
+## After configuration
 
-```bash
-composer require convertain/package-name
-```
+- The package name will be set to `:vendor_slug/:package_slug` with namespace `Vendor\Package`.
+- The service provider `Vendor\Package\PackageServiceProvider` is auto-discovered by Laravel.
+- Publish the config file when needed: `php artisan vendor:publish --tag=package-template-config`.
 
-## Configuration
+## Included tooling
 
-Publish the configuration file:
+- PHPUnit with Orchestra Testbench for Laravel package testing.
+- PHPStan (level 10) with Larastan for framework-aware analysis.
+- Laravel Pint with a PSR-12 preset.
+- Workbench for running the package inside a local Laravel app.
 
-```bash
-php artisan vendor:publish --tag=package-template-config
-```
+## Scripts
 
-## Usage
-
-### HasPublicId Trait
-
-Add UUID support to your models while keeping integer primary keys:
-
-```php
-use Convertain\PackageTemplate\Traits\HasPublicId;
-
-class YourModel extends Model
-{
-    use HasPublicId;
-    
-    // Model will automatically get a UUID on creation
-    // Routes will use UUID instead of ID
-}
-```
-
-### Package Integration Detection
-
-The package automatically detects and integrates with other Convertain packages:
-
-- **Organizations**: Adds organization-scoped features
-- **Permissions**: Registers package-specific permissions
-- **Checkout**: Integrates billing features
-
-## Development
-
-### Setup
-
-```bash
-composer install
-```
-
-### Testing
-
-Run tests with coverage:
-
-```bash
-composer test
-```
-
-Run tests with HTML coverage report:
-
-```bash
-composer test-coverage
-```
-
-### Code Quality
-
-Run Laravel Pint:
-
-```bash
-composer lint
-```
-
-Run PHPStan:
-
-```bash
-vendor/bin/phpstan analyse
-```
-
-### Development Server
-
-Start the Testbench development server:
-
-```bash
-composer serve
-```
-
-## Structure
-
-```
-├── config/                 # Configuration files
-├── database/
-│   ├── factories/         # Model factories
-│   └── migrations/        # Database migrations
-├── resources/
-│   ├── lang/             # Translation files
-│   └── views/            # Blade views
-├── routes/               # Route files
-│   ├── api.php
-│   └── web.php
-├── src/                  # Source code
-│   ├── Traits/          # Reusable traits
-│   └── PackageTemplateServiceProvider.php
-├── tests/               # Test files
-│   ├── Feature/
-│   ├── Pest/
-│   ├── Unit/
-│   ├── Pest.php
-│   └── TestCase.php
-├── .github/
-│   └── workflows/       # GitHub Actions
-├── composer.json
-├── phpstan.neon        # PHPStan config
-└── pint.json          # Laravel Pint config
-```
-
-## Creating a New Package
-
-1. Copy this template
-2. Replace `PackageTemplate` with your package name
-3. Replace `package-template` with your package slug
-4. Update composer.json with your package details
-5. Update configuration and service provider
-6. Add your package-specific logic
-
-## Quality Standards
-
-- ✅ 100% test coverage (enforced)
-- ✅ PHPStan Level 10 (no errors)
-- ✅ Laravel Pint PSR-12 formatting
-- ✅ Strict types declaration
-- ✅ Full PHPDoc documentation
+- `composer test` — run the test suite.
+- `composer analyse` — run PHPStan.
+- `composer lint` — run Pint.
+- `composer workbench` — boot the workbench Laravel app.
 
 ## License
 
-The MIT License (MIT). See [License File](LICENSE.md) for more information.
+The MIT License (MIT). See [LICENSE.md](LICENSE.md) for details.
