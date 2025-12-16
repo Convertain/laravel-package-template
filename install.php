@@ -213,7 +213,6 @@ $selectedFeatures = function_exists('Laravel\\Prompts\\multiselect')
             'migrations' => 'Database migrations',
         ],
         default: ['config', 'routes_web', 'views', 'translations', 'migrations'],
-        required: true,
     )
     : [];
 
@@ -234,7 +233,11 @@ $useRoutesApi = in_array('routes_api', $selectedFeatures);
 $useViews = in_array('views', $selectedFeatures);
 $useTranslations = in_array('translations', $selectedFeatures);
 $useMigrations = in_array('migrations', $selectedFeatures);
-$installBoost = confirm('Install Laravel Boost?', true);
+
+// Install Boost confirmation with styled prompt
+$installBoost = function_exists('Laravel\\Prompts\\confirm')
+    ? \Laravel\Prompts\confirm('Install Laravel Boost?', default: true)
+    : confirm('Install Laravel Boost?', true);
 
 $replacements = [
     ':vendor_slug' => $vendorSlug,
