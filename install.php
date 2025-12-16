@@ -302,8 +302,8 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 
     $updated = false;
 
-    // Helper: rewrite MCP command/args to use vendor/bin/testbench with boost:mcp
-    $updateMcpConfig = function (&$config): bool {
+    // Helper: update laravel-boost configuration to use vendor/bin/testbench
+    $updateLaravelBoostConfig = function (&$config): bool {
         if (! is_array($config)) {
             return false;
         }
@@ -315,30 +315,8 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
             $changed = true;
         }
 
-        // If there's an args array, ensure it contains only boost:mcp
-        if (isset($config['args']) && is_array($config['args'])) {
-            // Check if args needs updating
-            $needsUpdate = false;
-            
-            // Remove any artisan or full testbench paths from args
-            foreach ($config['args'] as $arg) {
-                if (is_string($arg) && (str_contains($arg, 'artisan') || str_contains($arg, 'testbench') || str_contains($arg, '/'))) {
-                    $needsUpdate = true;
-                    break;
-                }
-            }
-            
-            if ($needsUpdate) {
-                // Keep only boost:mcp in args
-                $config['args'] = ['boost:mcp'];
-                $changed = true;
-            } elseif ($config['args'] !== ['boost:mcp']) {
-                // Ensure args is exactly ['boost:mcp']
-                $config['args'] = ['boost:mcp'];
-                $changed = true;
-            }
-        } else {
-            // If no args, set to ['boost:mcp']
+        // Set args to only ['boost:mcp']
+        if (! isset($config['args']) || $config['args'] !== ['boost:mcp']) {
             $config['args'] = ['boost:mcp'];
             $changed = true;
         }
@@ -346,27 +324,38 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
         return $changed;
     };
 
-    // Common schema: mcpServers.laravel-boost
+    // Schema 1: mcpServers.laravel-boost (Cursor, Gemini, .mcp.json, .junie/mcp/mcp.json)
     if (isset($data['mcpServers']) && is_array($data['mcpServers'])) {
         if (isset($data['mcpServers']['laravel-boost'])) {
-            if ($updateMcpConfig($data['mcpServers']['laravel-boost'])) {
+            if ($updateLaravelBoostConfig($data['mcpServers']['laravel-boost'])) {
                 $updated = true;
             }
         }
     }
 
-    // Alternative: top-level laravel-boost
+    // Schema 2: servers.laravel-boost (VS Code)
+    if (isset($data['servers']) && is_array($data['servers'])) {
+        if (isset($data['servers']['laravel-boost'])) {
+            if ($updateLaravelBoostConfig($data['servers']['laravel-boost'])) {
+                $updated = true;
+            }
+        }
+    }
+
+    // Schema 3: top-level laravel-boost (fallback)
     if (isset($data['laravel-boost'])) {
-        if ($updateMcpConfig($data['laravel-boost'])) {
+        if ($updateLaravelBoostConfig($data['laravel-boost'])) {
             $updated = true;
         }
     }
 
-    // Fallback: clients array
+    // Schema 4: clients array (fallback)
     if (isset($data['clients']) && is_array($data['clients'])) {
         foreach ($data['clients'] as &$client) {
-            if ($updateMcpConfig($client)) {
-                $updated = true;
+            if (isset($client['laravel-boost'])) {
+                if ($updateLaravelBoostConfig($client['laravel-boost'])) {
+                    $updated = true;
+                }
             }
         }
         unset($client);
@@ -379,11 +368,11 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 };
 
 // Update VS Code (wait for file creation), Cursor, Gemini, Junie, and generic .mcp.json if present
-// DISABLED: $rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
-// DISABLED: $rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
-// DISABLED: $rewriteMcp(__DIR__.'/.gemini/settings.json', false);
-// DISABLED: $rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
-// DISABLED: $rewriteMcp(__DIR__.'/.mcp.json', false);
+$rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
+$rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
+$rewriteMcp(__DIR__.'/.gemini/settings.json', false);
+$rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
+$rewriteMcp(__DIR__.'/.mcp.json', false);
 
 replaceInFiles($files, $replacements);
 
