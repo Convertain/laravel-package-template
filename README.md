@@ -34,8 +34,8 @@ This repository is a starter template for building Laravel packages. Run the con
 ## Laravel Boost + Testbench
 
 - If you use Laravel Boost in VS Code, the MCP configuration may default to running the server via `php artisan boost:mcp`. For packages running under Orchestra Testbench, you may need to change this to use Testbench instead:
-   - From: `php artisan boost:mcp`
-   - To: `vendor/bin/testbench boost:mcp`
+  - From: `php artisan boost:mcp`
+  - To: `vendor/bin/testbench boost:mcp`
 
 - The installer attempts to update `.vscode/mcp.json` automatically for the common schemas. If the file does not exist (non–VS Code editors) or uses a different schema, adjust it manually as shown above.
 
