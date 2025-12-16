@@ -54,11 +54,10 @@ composer analyse
 
 #### Coding Standards
 
-- Follow **PSR-12** coding standards
 - Use **strict types** (`declare(strict_types=1);`)
 - Write **clear, descriptive variable and method names**
 - Add **DocBlocks** for classes and methods
-- Ensure code passes **PHPStan level 10** analysis
+- Ensure code passes **PHPStan** static analysis
 - Format code with **Laravel Pint**
 
 #### Testing Guidelines
