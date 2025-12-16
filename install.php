@@ -273,64 +273,74 @@ runCommand($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database 
 // Phase 2: Install Laravel Boost interactively, then fix MCP config for Testbench
 runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
 
-// Ensure .vscode/mcp.json uses vendor/bin/testbench for package context
-$mcpPath = __DIR__.'/.vscode/mcp.json';
-// VS Code writes MCP config asynchronously; wait a bit if file not present yet
-if (! file_exists($mcpPath)) {
-    // Try up to ~1s total (5 * 200ms)
-    for ($i = 0; $i < 5; $i++) {
-        usleep(200000);
-        if (file_exists($mcpPath)) {
-            break;
+// Helper to rewrite MCP configs to use Testbench
+$rewriteMcp = function (string $path, bool $waitForCreate = false): void {
+    if ($waitForCreate && ! file_exists($path)) {
+        for ($i = 0; $i < 5; $i++) {
+            usleep(200000); // 200ms
+            if (file_exists($path)) {
+                break;
+            }
         }
     }
-}
-if (file_exists($mcpPath)) {
-    $json = file_get_contents($mcpPath);
-    if ($json !== false) {
-        $data = json_decode($json, true);
-        if (is_array($data)) {
-            $updated = false;
 
-            // Handle VS Code MCP server style: mcpServers.laravel-boost
-            if (isset($data['mcpServers']) && is_array($data['mcpServers'])) {
-                if (isset($data['mcpServers']['laravel-boost']) && is_array($data['mcpServers']['laravel-boost'])) {
-                    $data['mcpServers']['laravel-boost']['command'] = 'vendor/bin/testbench';
-                    $data['mcpServers']['laravel-boost']['args'] = ['boost:mcp'];
-                    $updated = true;
+    if (! file_exists($path)) {
+        return;
+    }
+
+    $json = file_get_contents($path);
+    if ($json === false) {
+        return;
+    }
+
+    $data = json_decode($json, true);
+    if (! is_array($data)) {
+        return;
+    }
+
+    $updated = false;
+
+    // Common schema: mcpServers.laravel-boost
+    if (isset($data['mcpServers']) && is_array($data['mcpServers'])) {
+        if (isset($data['mcpServers']['laravel-boost']) && is_array($data['mcpServers']['laravel-boost'])) {
+            $data['mcpServers']['laravel-boost']['command'] = 'vendor/bin/testbench';
+            $data['mcpServers']['laravel-boost']['args'] = ['boost:mcp'];
+            $updated = true;
+        }
+    }
+
+    // Alternative: top-level laravel-boost
+    if (isset($data['laravel-boost']) && is_array($data['laravel-boost'])) {
+        $data['laravel-boost']['command'] = 'vendor/bin/testbench';
+        $data['laravel-boost']['args'] = ['boost:mcp'];
+        $updated = true;
+    }
+
+    // Fallback: clients array
+    if (isset($data['clients']) && is_array($data['clients'])) {
+        foreach ($data['clients'] as &$client) {
+            if (isset($client['command'])) {
+                $client['command'] = 'vendor/bin/testbench';
+                if (isset($client['args']) && is_array($client['args'])) {
+                    $client['args'] = ['boost:mcp'];
                 }
-            }
-
-            // Handle top-level laravel-boost key
-            if (isset($data['laravel-boost']) && is_array($data['laravel-boost'])) {
-                $data['laravel-boost']['command'] = 'vendor/bin/testbench';
-                $data['laravel-boost']['args'] = ['boost:mcp'];
                 $updated = true;
             }
-
-            // Fallback for other schemas: clients array
-            if (isset($data['clients']) && is_array($data['clients'])) {
-                foreach ($data['clients'] as &$client) {
-                    if (isset($client['command'])) {
-                        $client['command'] = 'vendor/bin/testbench';
-                        // args unknown in this schema; leave as-is unless present
-                        if (isset($client['args']) && is_array($client['args'])) {
-                            // Prefer explicit boost:mcp when schema supports args
-                            $client['args'] = ['boost:mcp'];
-                        }
-                        $updated = true;
-                    }
-                }
-                unset($client);
-            }
-
-            if ($updated) {
-                file_put_contents($mcpPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
-                echo 'Updated .vscode/mcp.json to use vendor/bin/testbench for Laravel Boost.'.PHP_EOL;
-            }
         }
+        unset($client);
     }
-}
+
+    if ($updated) {
+        file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+        echo 'Updated MCP config: '.str_replace(__DIR__.'/', '', $path).PHP_EOL;
+    }
+};
+
+// Update VS Code (wait for file creation), Cursor, Gemini, and generic .mcp.json if present
+$rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
+$rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
+$rewriteMcp(__DIR__.'/.gemini/settings.json', false);
+$rewriteMcp(__DIR__.'/.mcp.json', false);
 
 replaceInFiles($files, $replacements);
 
