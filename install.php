@@ -120,6 +120,8 @@ $replacements = [
     ':package_description' => $packageDescription,
     'Vendor\\Package\\Tests' => $namespace.'\\Tests',
     'Vendor\\Package' => $namespace,
+    ':namespace' => $namespace,
+    ':provider_class' => $providerClass,
     ':github_url' => $githubUrl,
     ':author_name' => $authorName,
     ':author_email' => $authorEmail,
@@ -212,38 +214,36 @@ if (! $useMigrations && is_dir($migrationsDir)) {
     passthru('rm -rf '.escapeshellarg($migrationsDir));
 }
 
-$providerContent = "<?php\n\n".
-    "declare(strict_types=1);\n\n".
-    "namespace {$namespace};\n\n".
-    "use Illuminate\\Support\\ServiceProvider;\n\n".
-    "class {$providerClass} extends ServiceProvider\n".
-    "{\n".
-    "    public function register(): void\n".
-    "    {\n".
-    ($useConfig ? "        \\$this->mergeConfigFrom(\n            __DIR__.'/../config/{$packageSlug}.php',\n            '{$packageSlug}',\n        );\n" : '').
-    "    }\n\n".
-    "    public function boot(): void\n".
-    "    {\n".
-    ($useRoutesWeb || $useRoutesApi ? "        \\$this->registerRoutes();\n" : '').
-    ($useViews ? "        \\$this->registerViews();\n" : '').
-    ($useTranslations ? "        \\$this->registerTranslations();\n" : '').
-    ($useMigrations ? "        \\$this->registerMigrations();\n" : '').
-    ($useConfig || $useViews || $useTranslations || $useMigrations ? "        \\$this->registerPublishing();\n" : '').
-    "    }\n\n".
-    ($useRoutesWeb || $useRoutesApi ? "    protected function registerRoutes(): void\n    {\n".
-        ($useRoutesWeb ? "        if (file_exists(__DIR__.'/../routes/web.php')) {\n            \\$this->loadRoutesFrom(__DIR__.'/../routes/web.php');\n        }\n\n" : '').
-        ($useRoutesApi ? "        if (file_exists(__DIR__.'/../routes/api.php')) {\n            \\$this->loadRoutesFrom(__DIR__.'/../routes/api.php');\n        }\n" : '').
-    "    }\n\n" : '').
-    ($useViews ? "    protected function registerViews(): void\n    {\n        if (is_dir(__DIR__.'/../resources/views')) {\n            \\$this->loadViewsFrom(__DIR__.'/../resources/views', '{$packageSlug}');\n        }\n    }\n\n" : '').
-    ($useTranslations ? "    protected function registerTranslations(): void\n    {\n        if (is_dir(__DIR__.'/../lang')) {\n            \\$this->loadTranslationsFrom(__DIR__.'/../lang', '{$packageSlug}');\n            \\$this->loadJsonTranslationsFrom(__DIR__.'/../lang');\n        }\n    }\n\n" : '').
-    ($useMigrations ? "    protected function registerMigrations(): void\n    {\n        if (is_dir(__DIR__.'/../database/migrations')) {\n            \\$this->loadMigrationsFrom(__DIR__.'/../database/migrations');\n        }\n    }\n\n" : '').
-    ($useConfig || $useViews || $useTranslations || $useMigrations ? "    protected function registerPublishing(): void\n    {\n        if (! \\$this->app->runningInConsole()) {\n            return;\n        }\n\n".
-        ($useConfig ? "        if (file_exists(__DIR__.'/../config/{$packageSlug}.php')) {\n            \\$this->publishes([\n                __DIR__.'/../config/{$packageSlug}.php' => config_path('{$packageSlug}.php'),\n            ], '{$packageSlug}-config');\n        }\n\n" : '').
-        ($useViews ? "        if (is_dir(__DIR__.'/../resources/views')) {\n            \\$this->publishes([\n                __DIR__.'/../resources/views' => resource_path('views/vendor/{$packageSlug}'),\n            ], '{$packageSlug}-views');\n        }\n\n" : '').
-        ($useTranslations ? "        if (is_dir(__DIR__.'/../lang')) {\n            \\$targetLangPath = method_exists(\$this->app, 'langPath')\n                ? \\$this->app->langPath('vendor/{$packageSlug}')\n                : resource_path('lang/vendor/{$packageSlug}');\n\n            \\$this->publishes([\n                __DIR__.'/../lang' => \\$targetLangPath,\n            ], '{$packageSlug}-lang');\n        }\n\n" : '').
-        ($useMigrations ? "        if (is_dir(__DIR__.'/../database/migrations')) {\n            \\$this->publishes([\n                __DIR__.'/../database/migrations' => database_path('migrations'),\n            ], '{$packageSlug}-migrations');\n        }\n" : '').
-    "    }\n" : '').
-    "}\n";
+// Build Service Provider from template with conditional sections
+$providerTemplatePath = __DIR__.'/data/Provider.php.txt';
+$providerContent = (string) file_get_contents($providerTemplatePath);
+
+// Apply simple replacements
+$providerContent = str_replace(array_keys($replacements), array_values($replacements), $providerContent);
+
+// Conditional sections handling (same pattern as README)
+$providerFlags = [
+    'config' => $useConfig,
+    'routes' => ($useRoutesWeb || $useRoutesApi),
+    'routes_web' => $useRoutesWeb,
+    'routes_api' => $useRoutesApi,
+    'views' => $useViews,
+    'translations' => $useTranslations,
+    'migrations' => $useMigrations,
+    'any_publishing' => ($useConfig || $useViews || $useTranslations || $useMigrations),
+];
+
+foreach ($providerFlags as $key => $enabled) {
+    $pattern = sprintf('/<!--\s*IF:%s\s*-->[\s\S]*?<!--\s*ENDIF:%s\s*-->/', preg_quote($key, '/'), preg_quote($key, '/'));
+    if (! $enabled) {
+        $providerContent = (string) preg_replace($pattern, '', $providerContent);
+    } else {
+        $providerContent = (string) preg_replace([
+            '/'.sprintf('<!--\s*IF:%s\s*-->', preg_quote($key, '/')).'/',
+            '/'.sprintf('<!--\s*ENDIF:%s\s*-->', preg_quote($key, '/')).'/',
+        ], '', $providerContent);
+    }
+}
 
 file_put_contents($providerTarget, $providerContent);
 
@@ -426,6 +426,21 @@ LICENSE;
 file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
 
 runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
+
+// Cleanup: remove the data templates directory now that installation is complete
+$dataDir = __DIR__.'/data';
+if (is_dir($dataDir)) {
+    $it = new RecursiveDirectoryIterator($dataDir, FilesystemIterator::SKIP_DOTS);
+    $filesIt = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($filesIt as $fsItem) {
+        if ($fsItem->isDir()) {
+            @rmdir($fsItem->getPathname());
+        } else {
+            @unlink($fsItem->getPathname());
+        }
+    }
+    @rmdir($dataDir);
+}
 
 if (confirm('Remove install.php after setup?', true)) {
     unlink(__FILE__);

@@ -1,0 +1,129 @@
+<?php
+
+declare(strict_types=1);
+
+namespace :namespace;
+
+use Illuminate\Support\ServiceProvider;
+
+class :provider_class extends ServiceProvider
+{
+    public function register(): void
+    {
+        <!-- IF:config -->
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/:package_slug.php',
+            ':package_slug',
+        );
+        <!-- ENDIF:config -->
+    }
+
+    public function boot(): void
+    {
+        <!-- IF:routes -->
+        $this->registerRoutes();
+        <!-- ENDIF:routes -->
+        <!-- IF:views -->
+        $this->registerViews();
+        <!-- ENDIF:views -->
+        <!-- IF:translations -->
+        $this->registerTranslations();
+        <!-- ENDIF:translations -->
+        <!-- IF:migrations -->
+        $this->registerMigrations();
+        <!-- ENDIF:migrations -->
+        <!-- IF:any_publishing -->
+        $this->registerPublishing();
+        <!-- ENDIF:any_publishing -->
+    }
+
+    <!-- IF:routes -->
+    protected function registerRoutes(): void
+    {
+        <!-- IF:routes_web -->
+        if (file_exists(__DIR__.'/../routes/web.php')) {
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        }
+
+        <!-- ENDIF:routes_web -->
+        <!-- IF:routes_api -->
+        if (file_exists(__DIR__.'/../routes/api.php')) {
+            $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        }
+        <!-- ENDIF:routes_api -->
+    }
+    <!-- ENDIF:routes -->
+
+    <!-- IF:views -->
+    protected function registerViews(): void
+    {
+        if (is_dir(__DIR__.'/../resources/views')) {
+            $this->loadViewsFrom(__DIR__.'/../resources/views', ':package_slug');
+        }
+    }
+    <!-- ENDIF:views -->
+
+    <!-- IF:translations -->
+    protected function registerTranslations(): void
+    {
+        if (is_dir(__DIR__.'/../lang')) {
+            $this->loadTranslationsFrom(__DIR__.'/../lang', ':package_slug');
+            $this->loadJsonTranslationsFrom(__DIR__.'/../lang');
+        }
+    }
+    <!-- ENDIF:translations -->
+
+    <!-- IF:migrations -->
+    protected function registerMigrations(): void
+    {
+        if (is_dir(__DIR__.'/../database/migrations')) {
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        }
+    }
+    <!-- ENDIF:migrations -->
+
+    <!-- IF:any_publishing -->
+    protected function registerPublishing(): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        <!-- IF:config -->
+        if (file_exists(__DIR__.'/../config/:package_slug.php')) {
+            $this->publishes([
+                __DIR__.'/../config/:package_slug.php' => config_path(':package_slug.php'),
+            ], ':package_slug-config');
+        }
+
+        <!-- ENDIF:config -->
+        <!-- IF:views -->
+        if (is_dir(__DIR__.'/../resources/views')) {
+            $this->publishes([
+                __DIR__.'/../resources/views' => resource_path('views/vendor/:package_slug'),
+            ], ':package_slug-views');
+        }
+
+        <!-- ENDIF:views -->
+        <!-- IF:translations -->
+        if (is_dir(__DIR__.'/../lang')) {
+            $targetLangPath = method_exists($this->app, 'langPath')
+                ? $this->app->langPath('vendor/:package_slug')
+                : resource_path('lang/vendor/:package_slug');
+
+            $this->publishes([
+                __DIR__.'/../lang' => $targetLangPath,
+            ], ':package_slug-lang');
+        }
+
+        <!-- ENDIF:translations -->
+        <!-- IF:migrations -->
+        if (is_dir(__DIR__.'/../database/migrations')) {
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], ':package_slug-migrations');
+        }
+        <!-- ENDIF:migrations -->
+    }
+    <!-- ENDIF:any_publishing -->
+}
