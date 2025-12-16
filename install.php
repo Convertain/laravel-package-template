@@ -439,4 +439,12 @@ if (confirm('Remove install.php after setup?', true)) {
     unlink(__FILE__);
 }
 
+// Run composer lint and analyse
+echo "\n".str_repeat('=', 80)."\n";
+echo 'Running code quality checks...\n';
+echo str_repeat('=', 80)."\n\n";
+
+passthru('composer lint', $lintExit);
+passthru('composer analyse', $analyseExit);
+
 exit(0);
