@@ -5,9 +5,8 @@ This repository is a starter template for building Convertain Laravel packages. 
 ## Quick start
 
 1. Clone the template: `git clone git@github.com:Convertain/laravel-package-template.git your-package-name`
-2. Install dependencies: `composer install`
-3. Configure it: `php configure.php` (runs workbench install, migrates, and installs Boost)
-4. Run checks:
+2. Configure it: `php configure.php` (installs dependencies, sets up workbench, runs migrations, and installs Boost)
+3. Run checks:
    - Tests: `composer test`
    - Static analysis: `composer analyse`
    - Code style: `composer lint`

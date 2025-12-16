@@ -71,7 +71,7 @@ function replaceInFiles(array $files, array $replacements): void
 $gitName = trim((string) shell_exec('git config user.name'));
 $gitEmail = trim((string) shell_exec('git config user.email'));
 
-$vendor = ask('Vendor name', $gitName ?: 'Convertain');
+$vendor = ask('Vendor name', 'Convertain');
 $package = ask('Package name (slug-friendly)', 'laravel-package-name');
 $packageDescription = ask('Package description', 'This package does something awesome.');
 
@@ -80,8 +80,8 @@ $packageSlug = slugify($package !== '' ? $package : 'package-name');
 $namespace = ask('Base namespace', studly($vendor).'\\'.studly($package));
 $providerClass = studly($package).'ServiceProvider';
 
-$authorName = ask('Author name', $gitName !== '' ? $gitName : $vendor);
-$authorEmail = ask('Author email', $gitEmail !== '' ? $gitEmail : 'author@example.com');
+$authorName = ask('Author name', 'Convertain Limited');
+$authorEmail = ask('Author email', 'support@convertain.com');
 $githubUrl = ask('GitHub repository URL', "https://github.com/{$vendorSlug}/{$packageSlug}");
 
 $licenseOptions = [
@@ -93,7 +93,7 @@ $licenseOptions = [
 
 $licenseChoice = ask(
     'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
-    'MIT',
+    'Proprietary',
 );
 
 while (! array_key_exists($licenseChoice, $licenseOptions)) {
