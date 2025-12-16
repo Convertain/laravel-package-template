@@ -11,11 +11,11 @@ A modern, fully-featured Laravel package template that scaffolds a production-re
 ## Features
 
 - **Interactive Installer**: Guided setup with choices for vendor name, package name, license, and optional features
-- **Modern Tooling**: PHPStan Level 10, Laravel Pint PSR-12, PHPUnit with Orchestra Testbench
-- **MCP Configuration**: Automatic setup for VS Code, Cursor, Gemini, and Junie with Laravel Boost MCP server
+- **Modern Tooling**: [PHPStan](https://phpstan.org) Level 10, [Laravel Pint](https://laravel.com/docs/pint) PSR-12, [PHPUnit](https://phpunit.de) with [Orchestra Testbench](https://github.com/orchestraplatform/testbench)
+- **MCP Configuration**: Automatic setup for VS Code, Cursor, Gemini, and Junie with [Laravel Boost](https://boost.laravel.com) MCP server
 - **Resource Management**: Selective inclusion of migrations, views, translations, routes, and publishable assets
 - **CI/CD Pipeline**: GitHub Actions workflow with linting, static analysis, and tests
-- **Laravel Boost Integration**: Full support for Laravel Boost with testbench MCP configuration
+- **Laravel Boost Integration**: Full support for [Laravel Boost](https://boost.laravel.com) with testbench MCP configuration
 - **Workbench Support**: Local development environment for testing your package
 
 ## Quick Start
@@ -87,17 +87,17 @@ php artisan vendor:publish --tag=your-package-migrations
 
 ## Included Technologies
 
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| Laravel | 12.x | Framework foundation |
-| PHP | 8.2 - 8.5 | Language requirement |
-| Orchestra Testbench | ^10 | Laravel package testing |
-| PHPUnit | ^11 | Unit testing framework |
-| PHPStan | ^2 (Level 10) | Static code analysis |
-| Larastan | ^3 | Laravel-aware PHPStan |
-| Laravel Pint | ^1.14 | Code style formatter |
-| Laravel Boost | ^1.0 | Development enhancement |
-| phpstan/extension-installer | ^1.4 | PHPStan extension auto-discovery |
+| Technology | Version | Purpose | Documentation |
+|-----------|---------|---------|---------|
+| [Laravel](https://laravel.com) | 12.x | Framework foundation | [Docs](https://laravel.com/docs) |
+| [PHP](https://www.php.net) | 8.2 - 8.5 | Language requirement | [Docs](https://www.php.net/docs.php) |
+| [Orchestra Testbench](https://github.com/orchestraplatform/testbench) | ^10 | Laravel package testing | [Docs](https://github.com/orchestraplatform/testbench) |
+| [PHPUnit](https://phpunit.de) | ^11 | Unit testing framework | [Docs](https://docs.phpunit.de) |
+| [PHPStan](https://phpstan.org) | ^2 (Level 10) | Static code analysis | [Docs](https://phpstan.org/user-guide/getting-started) |
+| [Larastan](https://github.com/larastan/larastan) | ^3 | Laravel-aware PHPStan | [Docs](https://github.com/larastan/larastan) |
+| [Laravel Pint](https://laravel.com/docs/pint) | ^1.14 | Code style formatter | [Docs](https://laravel.com/docs/pint) |
+| [Laravel Boost](https://boost.laravel.com) | ^1.0 | Development enhancement | [Docs](https://boost.laravel.com) |
+| [phpstan/extension-installer](https://github.com/phpstan/extension-installer) | ^1.4 | PHPStan extension auto-discovery | [GitHub](https://github.com/phpstan/extension-installer) |
 
 ## MCP Configuration
 
