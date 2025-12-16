@@ -201,6 +201,38 @@ if ($usePromptsForm) {
                 hint: 'Documentation for contributors and security reporting',
                 name: 'community_files',
             )
+            ->select(
+                label: 'PHPStan validation level',
+                options: [
+                    '10' => 'Level 10 - Strictest (recommended)',
+                    '9' => 'Level 9 - Very strict',
+                    '8' => 'Level 8 - Report nullable types',
+                    '7' => 'Level 7 - Union types',
+                    '6' => 'Level 6 - Check missing typehints',
+                    '5' => 'Level 5 - Check argument types',
+                    '4' => 'Level 4 - Dead code',
+                    '3' => 'Level 3 - Phpdoc types',
+                    '2' => 'Level 2 - Unknown methods',
+                    '1' => 'Level 1 - Possibly undefined vars',
+                    '0' => 'Level 0 - Basic checks',
+                ],
+                default: '10',
+                hint: 'Higher levels are stricter (0 = basic, 10 = strictest)',
+                name: 'phpstan_level',
+            )
+            ->select(
+                label: 'Laravel Pint preset',
+                options: [
+                    'psr12' => 'PSR-12 (recommended)',
+                    'laravel' => 'Laravel',
+                    'per' => 'PER Coding Style',
+                    'symfony' => 'Symfony',
+                    'empty' => 'Empty (no rules)',
+                ],
+                default: 'psr12',
+                hint: 'Code style standard for formatting',
+                name: 'pint_preset',
+            )
             ->confirm(
                 label: 'Install Laravel Boost?',
                 default: true,
@@ -230,6 +262,8 @@ if ($usePromptsForm) {
         $licenseChoice = $responses['license'];
         $selectedFeatures = $responses['features'] ?? [];
         $selectedCommunityFiles = $responses['community_files'] ?? [];
+        $phpstanLevel = $responses['phpstan_level'];
+        $pintPreset = $responses['pint_preset'];
         $installBoost = $responses['install_boost'];
         $removeInstaller = $responses['remove_installer'];
         
@@ -263,6 +297,8 @@ if ($usePromptsForm) {
                 ['License', $licenseChoice],
                 ['Features', $featuresDisplay],
                 ['Community Files', $communityDisplay],
+                ['PHPStan Level', $phpstanLevel],
+                ['Pint Preset', $pintPreset],
                 ['Install Boost', $installBoost ? 'Yes' : 'No'],
                 ['Remove Installer', $removeInstaller ? 'Yes' : 'No'],
             ],
@@ -338,6 +374,18 @@ if ($usePromptsForm) {
         }
     }
     
+    $phpstanLevel = ask('PHPStan level (0-10, higher is stricter)', '10');
+    while (! in_array($phpstanLevel, ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], true)) {
+        echo "Invalid choice. Please enter a number between 0 and 10.\n";
+        $phpstanLevel = ask('PHPStan level (0-10, higher is stricter)', '10');
+    }
+    
+    $pintPreset = ask('Laravel Pint preset (laravel/per/psr12/symfony/empty)', 'psr12');
+    while (! in_array($pintPreset, ['laravel', 'per', 'psr12', 'symfony', 'empty'], true)) {
+        echo "Invalid choice. Please enter one of: laravel, per, psr12, symfony, empty\n";
+        $pintPreset = ask('Laravel Pint preset (laravel/per/psr12/symfony/empty)', 'psr12');
+    }
+    
     $installBoost = confirm('Install Laravel Boost?', true);
     $removeInstaller = confirm('Remove install.php after setup?', true);
 }
@@ -355,6 +403,16 @@ $useContributing = in_array('contributing', $selectedCommunityFiles);
 $useSecurity = in_array('security', $selectedCommunityFiles);
 $useIssueTemplates = in_array('issue_templates', $selectedCommunityFiles);
 
+// Map Pint preset to display name for badges
+$pintPresetDisplay = match ($pintPreset) {
+    'psr12' => 'PSR--12',
+    'per' => 'PER',
+    'laravel' => 'Laravel',
+    'symfony' => 'Symfony',
+    'empty' => 'Empty',
+    default => strtoupper($pintPreset),
+};
+
 $replacements = [
     ':vendor_slug' => $vendorSlug,
     ':package_slug' => $packageSlug,
@@ -368,6 +426,9 @@ $replacements = [
     ':author_email' => $authorEmail,
     ':year' => date('Y'),
     ':license' => $licenseIdentifier,
+    ':phpstan_level' => $phpstanLevel,
+    ':pint_preset' => $pintPreset,
+    ':pint_preset_display' => $pintPresetDisplay,
     'package-template' => $packageSlug,
     'PackageServiceProvider' => $providerClass,
     ':package_namespace' => $namespace,
@@ -397,6 +458,29 @@ file_put_contents(
     $composerPath,
     json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL,
 );
+
+// Update PHPStan level in phpstan.neon.dist
+$phpstanPath = __DIR__.'/phpstan.neon.dist';
+if (file_exists($phpstanPath)) {
+    $phpstanContent = file_get_contents($phpstanPath);
+    if ($phpstanContent !== false) {
+        $phpstanContent = preg_replace('/level:\s*\d+/', 'level: '.$phpstanLevel, $phpstanContent);
+        file_put_contents($phpstanPath, $phpstanContent);
+    }
+}
+
+// Update Pint preset in pint.json
+$pintPath = __DIR__.'/pint.json';
+if (file_exists($pintPath)) {
+    $pintConfig = json_decode((string) file_get_contents($pintPath), true);
+    if (is_array($pintConfig)) {
+        $pintConfig['preset'] = $pintPreset;
+        file_put_contents(
+            $pintPath,
+            json_encode($pintConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL,
+        );
+    }
+}
 
 $providerPath = __DIR__.'/src/PackageServiceProvider.php';
 $providerTarget = __DIR__.'/src/'.$providerClass.'.php';

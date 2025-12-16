@@ -3,8 +3,8 @@
 [![Tests](https://github.com/:vendor_slug/:package_slug/actions/workflows/ci.yml/badge.svg)](https://github.com/:vendor_slug/:package_slug/actions/workflows/ci.yml)
 [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat&logo=laravel)](https://laravel.com)
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat&logo=php)](https://www.php.net)
-[![PHPStan Level 10](https://img.shields.io/badge/PHPStan-Level%2010-4F5B93?style=flat)](https://phpstan.org)
-[![Laravel Pint](https://img.shields.io/badge/Laravel%20Pint-PSR--12-F05340?style=flat)](https://laravel.com/docs/pint)
+[![PHPStan Level :phpstan_level](https://img.shields.io/badge/PHPStan-Level%20:phpstan_level-4F5B93?style=flat)](https://phpstan.org)
+[![Laravel Pint](https://img.shields.io/badge/Laravel%20Pint-:pint_preset_display-F05340?style=flat)](https://laravel.com/docs/pint)
 [![License](https://img.shields.io/badge/License-:license-red.svg)](LICENSE.md)
 
 :package_description
