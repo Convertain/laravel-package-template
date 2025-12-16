@@ -761,9 +761,6 @@ $runStep('Configuring MCP and finalizing files', function () use (
         __DIR__.'/tests/TestCase.php',
         __DIR__.'/.github/FUNDING.yml',
         __DIR__.'/LICENSE.md',
-        __DIR__.'/workbench/config/workbench.php',
-        __DIR__.'/workbench/routes/web.php',
-        __DIR__.'/workbench/routes/console.php',
         __DIR__.'/.vscode/mcp.json',
     ]));
     replaceInFiles($files, $replacements);
