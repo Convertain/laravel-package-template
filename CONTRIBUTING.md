@@ -1,6 +1,12 @@
 # Contributing to Laravel Package Template
 
-Thank you for considering contributing to Laravel Package Template! We welcome contributions from the community.
+Thank you for considering contributing to this Laravel package template! We welcome contributions from the community.
+
+## Understanding the Repository Structure
+
+This is a **package template repository**. The source code contains placeholder variables (like `:vendor_name`, `:package_slug`) that get replaced when users run `install.php` to scaffold their own package.
+
+**Important:** The `composer.json` in this repository is a template file and cannot be used directly. You cannot run `composer install` on this repository without first running the installer.
 
 ## How to Contribute
 
@@ -11,62 +17,74 @@ If you find a bug, please create an issue on GitHub with the following informati
 - A clear and descriptive title
 - Steps to reproduce the issue
 - Expected behavior vs. actual behavior
-- Your environment (PHP version, Laravel version, etc.)
-- Any relevant code snippets or error messages
+- Your environment (PHP version, OS, etc.)
+- Any relevant error messages
 
 ### Suggesting Enhancements
 
 We welcome suggestions for new features or improvements! Please create an issue with:
 
 - A clear description of the enhancement
-- Why it would be useful
+- Why it would be useful for package developers
 - Any potential implementation ideas
 
 ### Pull Requests
 
 1. **Fork the repository** and create a new branch from `main`
-2. **Make your changes** following our coding standards
-3. **Write tests** for your changes when applicable
-4. **Run the test suite** to ensure nothing is broken
-5. **Run code quality tools** (Pint and PHPStan)
-6. **Update documentation** if needed
-7. **Submit a pull request** with a clear description of your changes
+2. **Make your changes** to template files or the installer
+3. **Test the installer** by running it and verifying the generated package works
+4. **Update documentation** (README.md) if needed
+5. **Submit a pull request** with a clear description of your changes
 
-#### Development Setup
+#### Development & Testing Workflow
+
+Since this is a template repository, testing requires running the installer:
 
 ```bash
 # Clone your fork
 git clone https://github.com/YOUR-USERNAME/laravel-package-template.git
 cd laravel-package-template
 
-# Install dependencies
-composer install
+# Run the installer to generate a package
+php install.php
 
-# Run tests
+# After installation, test the generated package
 composer test
-
-# Run code styling
 composer lint
-
-# Run static analysis
 composer analyse
 ```
 
+To test changes without losing the template:
+
+```bash
+# Copy the template to a test directory
+cp -r laravel-package-template test-package
+cd test-package
+
+# Run the installer
+php install.php
+
+# Verify everything works
+composer test && composer lint && composer analyse
+```
+
+#### Key Files to Understand
+
+| File | Purpose |
+|------|---------|
+| `install.php` | Interactive installer script |
+| `data/` | Template files copied during installation |
+| `data/composer.json` | Template for the generated composer.json |
+| `data/Provider.php.txt` | Template for the service provider |
+| `data/licenses/` | License file templates |
+| `data/github/` | GitHub workflow and issue templates |
+
 #### Coding Standards
 
-- Follow **PSR-12** coding standards
 - Use **strict types** (`declare(strict_types=1);`)
 - Write **clear, descriptive variable and method names**
-- Add **DocBlocks** for classes and methods
-- Ensure code passes **PHPStan level 10** analysis
-- Format code with **Laravel Pint**
-
-#### Testing Guidelines
-
-- Write tests for new features
-- Ensure all tests pass before submitting PR
-- Aim for good test coverage
-- Use descriptive test method names
+- Keep the installer user-friendly with helpful prompts
+- Test all installer paths (different feature combinations)
 
 #### Commit Messages
 
@@ -77,11 +95,11 @@ composer analyse
 Example:
 
 ```text
-Add support for custom configuration options
+Add configurable PHPStan level selection
 
-- Added new config options for flexibility
-- Updated documentation with examples
-- Added tests for new functionality
+- Added prompt for PHPStan level (0-10)
+- Updated phpstan.neon.dist template
+- Updated README with new feature
 
 Fixes #123
 ```
@@ -111,9 +129,6 @@ We pledge to make participation in our project a harassment-free experience for 
 
 ## Questions?
 
-If you have questions about contributing, feel free to:
-
-- Create an issue on GitHub
-- Contact us at <support@convertain.com>
+If you have questions about contributing, feel free to create an issue on GitHub.
 
 Thank you for contributing! 🎉
