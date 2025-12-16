@@ -20,35 +20,41 @@ A modern, fully-featured Laravel package template that scaffolds a production-re
 
 ## Quick Start
 
-1. **Clone the template**:
+Two ways to start:
+
+1) **Clone this template repo (will drop the template remote automatically):**
 
    ```bash
    git clone git@github.com:Convertain/laravel-package-template.git your-package-name
    cd your-package-name
+   php install.php
    ```
 
-2. **Run the installer**:
+   The installer will remove the template `origin` remote if it points to `Convertain/laravel-package-template`, so you can add your own remote afterwards.
+
+2) **Use GitHub’s “Use this template → Create a new repository”** (your remotes are already correct):
 
    ```bash
    php install.php
    ```
 
-   This will guide you through:
-   - Package name and vendor details
-   - License selection (MIT, Proprietary, Apache 2.0, or BSD-3-Clause)
-   - Optional feature selection (migrations, views, translations, routes, publishable assets)
-   - Composer dependency installation
-   - Workbench setup
-   - Database migrations
-   - Laravel Boost installation
-   - MCP configuration updates
-   - Code quality checks (lint and static analysis)
+During installation you will be guided through:
 
-3. **Start developing**:
+- Package name and vendor details
+- License selection (MIT, Proprietary, Apache 2.0, or BSD-3-Clause)
+- Optional feature selection (migrations, views, translations, routes, publishable assets)
+- Composer dependency installation
+- Workbench setup
+- Database migrations
+- Laravel Boost installation
+- MCP configuration updates
+- Code quality checks (lint and static analysis)
 
-   ```bash
-   composer serve  # Start the workbench app
-   ```
+**Start developing:**
+
+```bash
+composer serve  # Start the workbench app
+```
 
 ## Available Commands
 
@@ -173,4 +179,3 @@ For issues or questions about the template, please open an issue on this reposit
 ---
 
 Made with ❤️ by [Convertain](https://github.com/Convertain)
-

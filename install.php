@@ -435,6 +435,35 @@ if (is_dir($dataDir)) {
     @rmdir($dataDir);
 }
 
+// Remove template git remote if present (only when this repo was cloned directly)
+$templateRepo = 'Convertain/laravel-package-template';
+if (is_dir(__DIR__.'/.git')) {
+    $remotesOutput = shell_exec('cd '.escapeshellarg(__DIR__).' && git remote -v 2>/dev/null');
+    if (is_string($remotesOutput) && trim($remotesOutput) !== '') {
+        $lines = explode("\n", trim($remotesOutput));
+        $removed = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            if (! preg_match('/^(\S+)\s+(\S+)\s+\(fetch\)$/', $line, $matches)) {
+                continue;
+            }
+            $remoteName = $matches[1];
+            $remoteUrl = $matches[2];
+            if (isset($removed[$remoteName])) {
+                continue;
+            }
+            if (str_contains($remoteUrl, $templateRepo)) {
+                echo "Removing template git remote '{$remoteName}'...".PHP_EOL;
+                runCommand('git remote remove '.$remoteName, 'Failed to remove template git remote: '.$remoteName);
+                $removed[$remoteName] = true;
+            }
+        }
+    }
+}
+
 if (confirm('Remove install.php after setup?', true)) {
     unlink(__FILE__);
 }
