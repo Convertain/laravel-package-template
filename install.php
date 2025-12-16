@@ -561,6 +561,11 @@ file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
 
 runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
 
+// Ask about removing installer before data cleanup so Prompts is available
+$removeInstaller = function_exists('Laravel\\Prompts\\confirm')
+    ? \Laravel\Prompts\confirm('Remove install.php after setup?', default: true)
+    : confirm('Remove install.php after setup?', true);
+
 // Cleanup: remove the data templates directory now that installation is complete
 $dataDir = __DIR__.'/data';
 if (is_dir($dataDir)) {
@@ -605,12 +610,8 @@ if (is_dir(__DIR__.'/.git')) {
     }
 }
 
-// Remove installer confirmation with styled prompt when available
-$removeInstaller = function_exists('Laravel\\Prompts\\confirm')
-    ? \Laravel\Prompts\confirm('Remove install.php after setup?', default: true)
-    : confirm('Remove install.php after setup?', true);
-
-if ($removeInstaller) {
+// Remove installer if previously confirmed
+if (isset($removeInstaller) && $removeInstaller) {
     unlink(__FILE__);
 }
 
