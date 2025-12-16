@@ -49,6 +49,24 @@ function runCommand(string $command, string $errorMessage): void
     }
 }
 
+/**
+ * Run a command silently, capturing output. Returns true on success, exits on failure.
+ */
+function runCommandSilent(string $command, string $errorMessage): bool
+{
+    $output = [];
+    $exitCode = 0;
+    exec($command.' 2>&1', $output, $exitCode);
+
+    if ($exitCode !== 0) {
+        // Show the error output before exiting
+        echo "\n".implode("\n", $output)."\n";
+        exit($errorMessage.PHP_EOL);
+    }
+
+    return true;
+}
+
 function replaceInFiles(array $files, array $replacements): void
 {
     foreach ($files as $file) {
@@ -424,187 +442,204 @@ $replacements = [
     'github: Convertain' => 'github: '.$vendorSlug,
 ];
 
-$composerPath = __DIR__.'/composer.json';
-$composer = json_decode((string) file_get_contents($composerPath), true, flags: JSON_THROW_ON_ERROR);
-
-$composer['name'] = "{$vendorSlug}/{$packageSlug}";
-$composer['description'] = $packageDescription;
-$composer['license'] = $licenseIdentifier;
-$composer['autoload']['psr-4'] = [$namespace.'\\' => 'src/'];
-$composer['autoload-dev']['psr-4'] = [
-    $namespace.'\\Tests\\' => 'tests/',
-];
-$composer['extra']['laravel']['providers'] = ["{$namespace}\\{$providerClass}"];
-$composer['homepage'] = $githubUrl;
-$composer['authors'] = [
-    [
-        'name' => $authorName,
-        'email' => $authorEmail,
-    ],
-];
-
-file_put_contents(
-    $composerPath,
-    json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL,
-);
-
-// Update PHPStan level in phpstan.neon.dist
-$phpstanPath = __DIR__.'/phpstan.neon.dist';
-if (file_exists($phpstanPath)) {
-    $phpstanContent = file_get_contents($phpstanPath);
-    if ($phpstanContent !== false) {
-        $phpstanContent = preg_replace('/level:\s*\d+/', 'level: '.$phpstanLevel, $phpstanContent);
-        file_put_contents($phpstanPath, $phpstanContent);
-    }
-}
-
-// Update Pint preset in pint.json
-$pintPath = __DIR__.'/pint.json';
-if (file_exists($pintPath)) {
-    $pintConfig = json_decode((string) file_get_contents($pintPath), true);
-    if (is_array($pintConfig)) {
-        $pintConfig['preset'] = $pintPreset;
-        file_put_contents(
-            $pintPath,
-            json_encode($pintConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL,
+// Helper to run a step with spinner (when available) or fallback output
+$runStep = function (string $label, callable $callback) use ($usePromptsForm): mixed {
+    if ($usePromptsForm && function_exists('Laravel\\Prompts\\spin')) {
+        return \Laravel\Prompts\spin(
+            callback: $callback,
+            message: $label,
         );
     }
-}
-
-$providerPath = __DIR__.'/src/PackageServiceProvider.php';
-$providerTarget = __DIR__.'/src/'.$providerClass.'.php';
-
-if (file_exists($providerPath) && $providerPath !== $providerTarget) {
-    rename($providerPath, $providerTarget);
-} elseif (! file_exists($providerTarget)) {
-    $providerTarget = $providerPath;
-}
-
-$configPath = __DIR__.'/config/package-template.php';
-$configTarget = __DIR__.'/config/'.($packageSlug !== '' ? $packageSlug : 'package-name').'.php';
-
-if ($useConfig) {
-    if (file_exists($configPath) && $configPath !== $configTarget) {
-        rename($configPath, $configTarget);
-    } elseif (! file_exists($configTarget)) {
-        $configTarget = $configPath;
-    }
-} else {
-    if (file_exists($configPath)) {
-        unlink($configPath);
-    }
-    if (file_exists($configTarget)) {
-        unlink($configTarget);
-    }
-    $configTarget = null;
-}
-
-$routesDir = __DIR__.'/routes';
-
-if (! $useRoutesWeb && file_exists($routesDir.'/web.php')) {
-    unlink($routesDir.'/web.php');
-}
-
-if (! $useRoutesApi && file_exists($routesDir.'/api.php')) {
-    unlink($routesDir.'/api.php');
-}
-
-if (is_dir($routesDir) && count(glob($routesDir.'/*')) === 0) {
-    @rmdir($routesDir);
-}
-
-$removeDirIfEmpty = function (string $dir): void {
-    if (! is_dir($dir)) {
-        return;
-    }
-    $entries = @scandir($dir);
-    if ($entries === false) {
-        return;
-    }
-    $nonDots = array_diff($entries, ['.', '..']);
-    if (count($nonDots) === 0) {
-        @rmdir($dir);
-    }
+    
+    // Fallback: show label and run
+    echo "→ {$label}...".PHP_EOL;
+    $result = $callback();
+    echo "  ✓ Done".PHP_EOL;
+    return $result;
 };
 
-$viewsDir = __DIR__.'/resources/views';
-if (! $useViews && is_dir($viewsDir)) {
-    passthru('rm -rf '.escapeshellarg($viewsDir));
+// Show installation progress header
+if ($usePromptsForm) {
+    echo "\n";
+    \Laravel\Prompts\info('🚀 Installing package...');
+    echo "\n";
+} else {
+    echo "\n".str_repeat('=', 60)."\n";
+    echo "  Installing package...\n";
+    echo str_repeat('=', 60)."\n\n";
 }
-$removeDirIfEmpty(__DIR__.'/resources');
 
-$langDir = __DIR__.'/lang';
-if (! $useTranslations && is_dir($langDir)) {
-    passthru('rm -rf '.escapeshellarg($langDir));
-}
+$composerPath = __DIR__.'/composer.json';
+$providerTarget = null;
+$configTarget = null;
 
-$migrationsDir = __DIR__.'/database/migrations';
-if (! $useMigrations && is_dir($migrationsDir)) {
-    passthru('rm -rf '.escapeshellarg($migrationsDir));
-}
-$removeDirIfEmpty(__DIR__.'/database');
+// Step 1: Configure package files
+$runStep('Configuring package files', function () use (
+    $composerPath, $vendorSlug, $packageSlug, $packageDescription, $licenseIdentifier,
+    $namespace, $providerClass, $githubUrl, $authorName, $authorEmail,
+    $phpstanLevel, $pintPreset, $useConfig, $useRoutesWeb, $useRoutesApi,
+    $useViews, $useTranslations, $useMigrations, $replacements,
+    &$providerTarget, &$configTarget
+) {
+    // Update composer.json
+    $composer = json_decode((string) file_get_contents($composerPath), true, flags: JSON_THROW_ON_ERROR);
+    $composer['name'] = "{$vendorSlug}/{$packageSlug}";
+    $composer['description'] = $packageDescription;
+    $composer['license'] = $licenseIdentifier;
+    $composer['autoload']['psr-4'] = [$namespace.'\\' => 'src/'];
+    $composer['autoload-dev']['psr-4'] = [$namespace.'\\Tests\\' => 'tests/'];
+    $composer['extra']['laravel']['providers'] = ["{$namespace}\\{$providerClass}"];
+    $composer['homepage'] = $githubUrl;
+    $composer['authors'] = [['name' => $authorName, 'email' => $authorEmail]];
+    file_put_contents($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL);
 
-$configDir = __DIR__.'/config';
-$removeDirIfEmpty($configDir);
-
-// Build Service Provider from template with conditional sections
-$providerTemplatePath = __DIR__.'/data/Provider.php.txt';
-$providerContent = (string) file_get_contents($providerTemplatePath);
-
-// Apply simple replacements
-$providerContent = str_replace(array_keys($replacements), array_values($replacements), $providerContent);
-
-// Conditional sections handling (same pattern as README)
-$providerFlags = [
-    'config' => $useConfig,
-    'routes' => ($useRoutesWeb || $useRoutesApi),
-    'routes_web' => $useRoutesWeb,
-    'routes_api' => $useRoutesApi,
-    'views' => $useViews,
-    'translations' => $useTranslations,
-    'migrations' => $useMigrations,
-    'any_publishing' => ($useConfig || $useViews || $useTranslations || $useMigrations),
-];
-
-foreach ($providerFlags as $key => $enabled) {
-    $pattern = sprintf('/<!--\s*IF:%s\s*-->[\s\S]*?<!--\s*ENDIF:%s\s*-->/', preg_quote($key, '/'), preg_quote($key, '/'));
-    if (! $enabled) {
-        $providerContent = (string) preg_replace($pattern, '', $providerContent);
-    } else {
-        $providerContent = (string) preg_replace([
-            '/'.sprintf('<!--\s*IF:%s\s*-->', preg_quote($key, '/')).'/',
-            '/'.sprintf('<!--\s*ENDIF:%s\s*-->', preg_quote($key, '/')).'/',
-        ], '', $providerContent);
+    // Update PHPStan level
+    $phpstanPath = __DIR__.'/phpstan.neon.dist';
+    if (file_exists($phpstanPath)) {
+        $content = file_get_contents($phpstanPath);
+        if ($content !== false) {
+            file_put_contents($phpstanPath, preg_replace('/level:\s*\d+/', 'level: '.$phpstanLevel, $content));
+        }
     }
-}
 
-file_put_contents($providerTarget, $providerContent);
+    // Update Pint preset
+    $pintPath = __DIR__.'/pint.json';
+    if (file_exists($pintPath)) {
+        $pintConfig = json_decode((string) file_get_contents($pintPath), true);
+        if (is_array($pintConfig)) {
+            $pintConfig['preset'] = $pintPreset;
+            file_put_contents($pintPath, json_encode($pintConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+        }
+    }
 
-$files = array_values(array_filter([
-    __DIR__.'/README.md',
-    __DIR__.'/phpunit.xml.dist',
-    $providerTarget,
-    $configTarget,
-    __DIR__.'/tests/ExampleTest.php',
-    __DIR__.'/tests/TestCase.php',
-    __DIR__.'/.github/FUNDING.yml',
-    __DIR__.'/LICENSE.md',
-    __DIR__.'/workbench/config/workbench.php',
-    __DIR__.'/workbench/routes/web.php',
-    __DIR__.'/workbench/routes/console.php',
-    __DIR__.'/.vscode/mcp.json',
-]));
+    // Rename provider
+    $providerPath = __DIR__.'/src/PackageServiceProvider.php';
+    $providerTarget = __DIR__.'/src/'.$providerClass.'.php';
+    if (file_exists($providerPath) && $providerPath !== $providerTarget) {
+        rename($providerPath, $providerTarget);
+    } elseif (! file_exists($providerTarget)) {
+        $providerTarget = $providerPath;
+    }
 
-runCommand('composer install --prefer-dist --no-interaction --no-progress', 'Composer install failed.');
-runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
+    // Handle config file
+    $configPath = __DIR__.'/config/package-template.php';
+    $configTarget = __DIR__.'/config/'.($packageSlug !== '' ? $packageSlug : 'package-name').'.php';
+    if ($useConfig) {
+        if (file_exists($configPath) && $configPath !== $configTarget) {
+            rename($configPath, $configTarget);
+        } elseif (! file_exists($configTarget)) {
+            $configTarget = $configPath;
+        }
+    } else {
+        if (file_exists($configPath)) unlink($configPath);
+        if (file_exists($configTarget)) unlink($configTarget);
+        $configTarget = null;
+    }
+
+    // Handle routes
+    $routesDir = __DIR__.'/routes';
+    if (! $useRoutesWeb && file_exists($routesDir.'/web.php')) unlink($routesDir.'/web.php');
+    if (! $useRoutesApi && file_exists($routesDir.'/api.php')) unlink($routesDir.'/api.php');
+    if (is_dir($routesDir) && count(glob($routesDir.'/*')) === 0) @rmdir($routesDir);
+
+    // Helper to remove empty dirs
+    $removeDirIfEmpty = function (string $dir): void {
+        if (! is_dir($dir)) return;
+        $entries = @scandir($dir);
+        if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) @rmdir($dir);
+    };
+
+    // Handle views
+    $viewsDir = __DIR__.'/resources/views';
+    if (! $useViews && is_dir($viewsDir)) {
+        $it = new RecursiveDirectoryIterator($viewsDir, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $f) { $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
+        @rmdir($viewsDir);
+    }
+    $removeDirIfEmpty(__DIR__.'/resources');
+
+    // Handle translations
+    $langDir = __DIR__.'/lang';
+    if (! $useTranslations && is_dir($langDir)) {
+        $it = new RecursiveDirectoryIterator($langDir, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $f) { $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
+        @rmdir($langDir);
+    }
+
+    // Handle migrations
+    $migrationsDir = __DIR__.'/database/migrations';
+    if (! $useMigrations && is_dir($migrationsDir)) {
+        $it = new RecursiveDirectoryIterator($migrationsDir, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $f) { $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
+        @rmdir($migrationsDir);
+    }
+    $removeDirIfEmpty(__DIR__.'/database');
+    $removeDirIfEmpty(__DIR__.'/config');
+
+    return true;
+});
+
+// Step 2: Build Service Provider
+$runStep('Building service provider', function () use ($replacements, $providerTarget, $useConfig, $useRoutesWeb, $useRoutesApi, $useViews, $useTranslations, $useMigrations) {
+    $providerTemplatePath = __DIR__.'/data/Provider.php.txt';
+    $providerContent = (string) file_get_contents($providerTemplatePath);
+    $providerContent = str_replace(array_keys($replacements), array_values($replacements), $providerContent);
+
+    $providerFlags = [
+        'config' => $useConfig,
+        'routes' => ($useRoutesWeb || $useRoutesApi),
+        'routes_web' => $useRoutesWeb,
+        'routes_api' => $useRoutesApi,
+        'views' => $useViews,
+        'translations' => $useTranslations,
+        'migrations' => $useMigrations,
+        'any_publishing' => ($useConfig || $useViews || $useTranslations || $useMigrations),
+    ];
+
+    foreach ($providerFlags as $key => $enabled) {
+        $pattern = sprintf('/<!--\s*IF:%s\s*-->[\s\S]*?<!--\s*ENDIF:%s\s*-->/', preg_quote($key, '/'), preg_quote($key, '/'));
+        if (! $enabled) {
+            $providerContent = (string) preg_replace($pattern, '', $providerContent);
+        } else {
+            $providerContent = (string) preg_replace([
+                '/'.sprintf('<!--\s*IF:%s\s*-->', preg_quote($key, '/')).'/',
+                '/'.sprintf('<!--\s*ENDIF:%s\s*-->', preg_quote($key, '/')).'/',
+            ], '', $providerContent);
+        }
+    }
+
+    file_put_contents($providerTarget, $providerContent);
+    return true;
+});
+
+// Step 3: Install Composer dependencies
+$runStep('Installing Composer dependencies', function () {
+    runCommandSilent('composer install --prefer-dist --no-interaction --no-progress', 'Composer install failed.');
+    runCommandSilent('composer dump-autoload', 'Composer dump-autoload failed.');
+    return true;
+});
 
 $testbenchBinary = __DIR__.'/vendor/bin/testbench';
 
-runCommand($testbenchBinary.' workbench:install --no-interaction --ansi', 'Workbench install failed.');
-runCommand($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
+// Step 4: Setup Workbench
+$runStep('Setting up Workbench environment', function () use ($testbenchBinary) {
+    runCommandSilent($testbenchBinary.' workbench:install --no-interaction --ansi', 'Workbench install failed.');
+    runCommandSilent($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
+    return true;
+});
 
-// Phase 2: Install Laravel Boost interactively, then fix MCP config for Testbench
+// Step 5: Install Laravel Boost (interactive - cannot use spinner)
 if ($installBoost) {
+    if ($usePromptsForm) {
+        echo "\n";
+        \Laravel\Prompts\info('📦 Installing Laravel Boost...');
+        echo "\n";
+    } else {
+        echo "\n→ Installing Laravel Boost...\n";
+    }
     runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
 }
 
@@ -698,188 +733,207 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 
     if ($updated) {
         file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
-        echo 'Updated MCP config: '.str_replace(__DIR__.'/', '', $path).PHP_EOL;
     }
 };
 
-if ($installBoost) {
-    // Update VS Code (wait for file creation), Cursor, Gemini, Junie, and generic .mcp.json if present
-    $rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
-    $rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
-    $rewriteMcp(__DIR__.'/.gemini/settings.json', false);
-    $rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
-    $rewriteMcp(__DIR__.'/.mcp.json', false);
-} else {
-    echo "Skipped Laravel Boost installation; MCP configs were not modified.".PHP_EOL;
-}
-
-replaceInFiles($files, $replacements);
-
-// Build package README from template if present
-$readmeTemplate = __DIR__.'/README.package.md';
-if (file_exists($readmeTemplate)) {
-    $content = (string) file_get_contents($readmeTemplate);
-
-    // Apply simple replacements
-    $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-
-    // Conditional sections handling
-    $flags = [
-        'config' => $useConfig,
-        'routes' => ($useRoutesWeb || $useRoutesApi),
-        'routes_web' => $useRoutesWeb,
-        'routes_api' => $useRoutesApi,
-        'views' => $useViews,
-        'translations' => $useTranslations,
-        'migrations' => $useMigrations,
-    ];
-
-    foreach ($flags as $key => $enabled) {
-        $pattern = sprintf('/<!--\\s*IF:%s\\s*-->[\\s\\S]*?<!--\\s*ENDIF:%s\\s*-->/', preg_quote($key, '/'), preg_quote($key, '/'));
-        if (! $enabled) {
-            $content = (string) preg_replace($pattern, '', $content);
-        } else {
-            // Remove the markers but keep the content
-            $content = (string) preg_replace(['/' . sprintf('<!--\\s*IF:%s\\s*-->', preg_quote($key, '/')) . '/', '/' . sprintf('<!--\\s*ENDIF:%s\\s*-->', preg_quote($key, '/')) . '/'], '', $content);
-        }
+// Step 6: Configure MCP and finalize files
+$runStep('Configuring MCP and finalizing files', function () use (
+    $installBoost, $rewriteMcp, $replacements, $providerTarget, $configTarget,
+    $useConfig, $useRoutesWeb, $useRoutesApi, $useViews, $useTranslations, $useMigrations,
+    $licenseChoice, $useContributing, $useSecurity, $useIssueTemplates
+) {
+    // Rewrite MCP configs if Boost is installed
+    if ($installBoost) {
+        $rewriteMcp(__DIR__.'/.vscode/mcp.json', true);
+        $rewriteMcp(__DIR__.'/.cursor/mcp.json', false);
+        $rewriteMcp(__DIR__.'/.gemini/settings.json', false);
+        $rewriteMcp(__DIR__.'/.junie/mcp/mcp.json', false);
+        $rewriteMcp(__DIR__.'/.mcp.json', false);
     }
 
-    file_put_contents(__DIR__.'/README.md', $content);
-    @unlink($readmeTemplate);
-}
+    // Replace placeholders in files
+    $files = array_values(array_filter([
+        __DIR__.'/README.md',
+        __DIR__.'/phpunit.xml.dist',
+        $providerTarget,
+        $configTarget,
+        __DIR__.'/tests/ExampleTest.php',
+        __DIR__.'/tests/TestCase.php',
+        __DIR__.'/.github/FUNDING.yml',
+        __DIR__.'/LICENSE.md',
+        __DIR__.'/workbench/config/workbench.php',
+        __DIR__.'/workbench/routes/web.php',
+        __DIR__.'/workbench/routes/console.php',
+        __DIR__.'/.vscode/mcp.json',
+    ]));
+    replaceInFiles($files, $replacements);
 
-$year = date('Y');
-$licenseTemplatePath = __DIR__.'/data/licenses/'.$licenseChoice.'.txt';
-if (! file_exists($licenseTemplatePath)) {
-    $licenseTemplatePath = __DIR__.'/data/licenses/MIT.txt';
-}
-$licenseContent = (string) file_get_contents($licenseTemplatePath);
-$licenseContent = str_replace(array_keys($replacements), array_values($replacements), $licenseContent);
-file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
-
-// Generate community files from templates
-if ($useContributing) {
-    $contributingTemplate = __DIR__.'/data/CONTRIBUTING.md.txt';
-    if (file_exists($contributingTemplate)) {
-        $content = (string) file_get_contents($contributingTemplate);
+    // Build package README from template
+    $readmeTemplate = __DIR__.'/README.package.md';
+    if (file_exists($readmeTemplate)) {
+        $content = (string) file_get_contents($readmeTemplate);
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-        file_put_contents(__DIR__.'/CONTRIBUTING.md', $content);
-        echo "Created CONTRIBUTING.md\n";
-    }
-} else {
-    // Remove CONTRIBUTING.md if it exists from template
-    if (file_exists(__DIR__.'/CONTRIBUTING.md')) {
-        @unlink(__DIR__.'/CONTRIBUTING.md');
-    }
-}
 
-if ($useSecurity) {
-    $securityTemplate = __DIR__.'/data/SECURITY.md.txt';
-    if (file_exists($securityTemplate)) {
-        $content = (string) file_get_contents($securityTemplate);
-        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-        file_put_contents(__DIR__.'/SECURITY.md', $content);
-        echo "Created SECURITY.md\n";
-    }
-} else {
-    // Remove SECURITY.md if it exists from template
-    if (file_exists(__DIR__.'/SECURITY.md')) {
-        @unlink(__DIR__.'/SECURITY.md');
-    }
-}
+        $flags = [
+            'config' => $useConfig,
+            'routes' => ($useRoutesWeb || $useRoutesApi),
+            'routes_web' => $useRoutesWeb,
+            'routes_api' => $useRoutesApi,
+            'views' => $useViews,
+            'translations' => $useTranslations,
+            'migrations' => $useMigrations,
+        ];
 
-if ($useIssueTemplates) {
-    $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
-    $dataIssueTemplateDir = __DIR__.'/data/github/ISSUE_TEMPLATE';
-    
-    if (is_dir($dataIssueTemplateDir)) {
-        if (! is_dir($issueTemplateDir)) {
-            mkdir($issueTemplateDir, 0755, true);
-        }
-        
-        foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
-            $sourcePath = $dataIssueTemplateDir.'/'.$templateFile;
-            if (file_exists($sourcePath)) {
-                $content = (string) file_get_contents($sourcePath);
-                $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-                file_put_contents($issueTemplateDir.'/'.$templateFile, $content);
-                echo "Created .github/ISSUE_TEMPLATE/{$templateFile}\n";
+        foreach ($flags as $key => $enabled) {
+            $pattern = sprintf('/<!--\\s*IF:%s\\s*-->[\\s\\S]*?<!--\\s*ENDIF:%s\\s*-->/', preg_quote($key, '/'), preg_quote($key, '/'));
+            if (! $enabled) {
+                $content = (string) preg_replace($pattern, '', $content);
+            } else {
+                $content = (string) preg_replace(['/' . sprintf('<!--\\s*IF:%s\\s*-->', preg_quote($key, '/')) . '/', '/' . sprintf('<!--\\s*ENDIF:%s\\s*-->', preg_quote($key, '/')) . '/'], '', $content);
             }
         }
-    }
-} else {
-    // Remove issue templates if they exist
-    $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
-    if (is_dir($issueTemplateDir)) {
-        foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
-            $filePath = $issueTemplateDir.'/'.$templateFile;
-            if (file_exists($filePath)) {
-                @unlink($filePath);
-            }
-        }
-        // Remove directory if empty
-        $entries = @scandir($issueTemplateDir);
-        if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) {
-            @rmdir($issueTemplateDir);
-        }
-    }
-}
 
-runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
+        file_put_contents(__DIR__.'/README.md', $content);
+        @unlink($readmeTemplate);
+    }
 
-// Cleanup: remove the data templates directory now that installation is complete
-$dataDir = __DIR__.'/data';
-if (is_dir($dataDir)) {
-    $it = new RecursiveDirectoryIterator($dataDir, FilesystemIterator::SKIP_DOTS);
-    $filesIt = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-    foreach ($filesIt as $fsItem) {
-        if ($fsItem->isDir()) {
-            @rmdir($fsItem->getPathname());
-        } else {
-            @unlink($fsItem->getPathname());
+    // Generate LICENSE.md
+    $licenseTemplatePath = __DIR__.'/data/licenses/'.$licenseChoice.'.txt';
+    if (! file_exists($licenseTemplatePath)) {
+        $licenseTemplatePath = __DIR__.'/data/licenses/MIT.txt';
+    }
+    $licenseContent = (string) file_get_contents($licenseTemplatePath);
+    $licenseContent = str_replace(array_keys($replacements), array_values($replacements), $licenseContent);
+    file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
+
+    // Generate community files
+    if ($useContributing) {
+        $contributingTemplate = __DIR__.'/data/CONTRIBUTING.md.txt';
+        if (file_exists($contributingTemplate)) {
+            $content = (string) file_get_contents($contributingTemplate);
+            $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+            file_put_contents(__DIR__.'/CONTRIBUTING.md', $content);
+        }
+    } else {
+        if (file_exists(__DIR__.'/CONTRIBUTING.md')) @unlink(__DIR__.'/CONTRIBUTING.md');
+    }
+
+    if ($useSecurity) {
+        $securityTemplate = __DIR__.'/data/SECURITY.md.txt';
+        if (file_exists($securityTemplate)) {
+            $content = (string) file_get_contents($securityTemplate);
+            $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+            file_put_contents(__DIR__.'/SECURITY.md', $content);
+        }
+    } else {
+        if (file_exists(__DIR__.'/SECURITY.md')) @unlink(__DIR__.'/SECURITY.md');
+    }
+
+    if ($useIssueTemplates) {
+        $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
+        $dataIssueTemplateDir = __DIR__.'/data/github/ISSUE_TEMPLATE';
+        if (is_dir($dataIssueTemplateDir)) {
+            if (! is_dir($issueTemplateDir)) mkdir($issueTemplateDir, 0755, true);
+            foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
+                $sourcePath = $dataIssueTemplateDir.'/'.$templateFile;
+                if (file_exists($sourcePath)) {
+                    $content = (string) file_get_contents($sourcePath);
+                    $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+                    file_put_contents($issueTemplateDir.'/'.$templateFile, $content);
+                }
+            }
+        }
+    } else {
+        $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
+        if (is_dir($issueTemplateDir)) {
+            foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
+                $filePath = $issueTemplateDir.'/'.$templateFile;
+                if (file_exists($filePath)) @unlink($filePath);
+            }
+            $entries = @scandir($issueTemplateDir);
+            if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) @rmdir($issueTemplateDir);
         }
     }
-    @rmdir($dataDir);
-}
 
-// Remove template git remote if present (only when this repo was cloned directly)
-$templateRepo = 'Convertain/laravel-package-template';
-if (is_dir(__DIR__.'/.git')) {
-    $remotesOutput = shell_exec('cd '.escapeshellarg(__DIR__).' && git remote -v 2>/dev/null');
-    if (is_string($remotesOutput) && trim($remotesOutput) !== '') {
-        $lines = explode("\n", trim($remotesOutput));
-        $removed = [];
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
+    return true;
+});
+
+// Step 7: Cleanup
+$runStep('Cleaning up temporary files', function () {
+    runCommandSilent('composer dump-autoload', 'Composer dump-autoload failed.');
+
+    // Remove the data templates directory
+    $dataDir = __DIR__.'/data';
+    if (is_dir($dataDir)) {
+        $it = new RecursiveDirectoryIterator($dataDir, FilesystemIterator::SKIP_DOTS);
+        $filesIt = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($filesIt as $fsItem) {
+            if ($fsItem->isDir()) {
+                @rmdir($fsItem->getPathname());
+            } else {
+                @unlink($fsItem->getPathname());
             }
-            if (! preg_match('/^(\S+)\s+(\S+)\s+\(fetch\)$/', $line, $matches)) {
-                continue;
-            }
-            $remoteName = $matches[1];
-            $remoteUrl = $matches[2];
-            if (isset($removed[$remoteName])) {
-                continue;
-            }
-            if (str_contains($remoteUrl, $templateRepo)) {
-                echo "Removing template git remote '{$remoteName}'...".PHP_EOL;
-                runCommand('git remote remove '.$remoteName, 'Failed to remove template git remote: '.$remoteName);
-                $removed[$remoteName] = true;
+        }
+        @rmdir($dataDir);
+    }
+
+    // Remove template git remote if present
+    $templateRepo = 'Convertain/laravel-package-template';
+    if (is_dir(__DIR__.'/.git')) {
+        $remotesOutput = shell_exec('cd '.escapeshellarg(__DIR__).' && git remote -v 2>/dev/null');
+        if (is_string($remotesOutput) && trim($remotesOutput) !== '') {
+            $lines = explode("\n", trim($remotesOutput));
+            $removed = [];
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '' || ! preg_match('/^(\S+)\s+(\S+)\s+\(fetch\)$/', $line, $matches)) continue;
+                $remoteName = $matches[1];
+                $remoteUrl = $matches[2];
+                if (isset($removed[$remoteName])) continue;
+                if (str_contains($remoteUrl, $templateRepo)) {
+                    shell_exec('git remote remove '.escapeshellarg($remoteName).' 2>/dev/null');
+                    $removed[$remoteName] = true;
+                }
             }
         }
     }
-}
+
+    return true;
+});
 
 // Remove installer (it cannot be re-run after setup completes)
 unlink(__FILE__);
 
-// Run composer lint and analyse
-echo "\n".str_repeat('=', 80)."\n";
-echo 'Running code quality checks...\n';
-echo str_repeat('=', 80)."\n\n";
+// Step 8: Run code quality checks (shows output)
+if ($usePromptsForm) {
+    echo "\n";
+    \Laravel\Prompts\info('🔍 Running code quality checks...');
+    echo "\n";
+} else {
+    echo "\n".str_repeat('=', 60)."\n";
+    echo "  Running code quality checks...\n";
+    echo str_repeat('=', 60)."\n\n";
+}
 
 passthru('composer lint', $lintExit);
 passthru('composer analyse', $analyseExit);
+
+// Final success message
+if ($usePromptsForm) {
+    echo "\n";
+    \Laravel\Prompts\outro("✅ Package '{$packageSlug}' has been configured successfully!");
+    echo "\n";
+    \Laravel\Prompts\info("Next steps:");
+    echo "  → Run 'composer serve' to start the development server\n";
+    echo "  → Run 'composer test' to run the test suite\n";
+    echo "\n";
+} else {
+    echo "\n".str_repeat('=', 60)."\n";
+    echo "  ✅ Package '{$packageSlug}' configured successfully!\n";
+    echo str_repeat('=', 60)."\n\n";
+    echo "Next steps:\n";
+    echo "  → Run 'composer serve' to start the development server\n";
+    echo "  → Run 'composer test' to run the test suite\n\n";
+}
 
 exit(0);
