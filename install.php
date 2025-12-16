@@ -82,79 +82,198 @@ if (file_exists($dataVendorDir.'/autoload.php')) {
     require $dataVendorDir.'/autoload.php';
 }
 
-// Display header
-echo "\n";
-echo str_repeat('=', 80)."\n";
-echo "  Laravel Package Template - Package Configurator\n";
-echo str_repeat('=', 80)."\n\n";
-
+// Pre-fetch git defaults
 $gitName = trim((string) shell_exec('git config user.name'));
 $gitEmail = trim((string) shell_exec('git config user.email'));
+$defaultPackageSlug = slugify(basename(getcwd()));
 
-// Use Prompts for nice text inputs if available
-$usePrompts = function_exists('Laravel\\Prompts\\text');
+// License options
+$licenseOptions = [
+    'MIT' => 'MIT',
+    'Proprietary' => 'proprietary',
+    'Apache-2.0' => 'Apache-2.0',
+    'BSD-3-Clause' => 'BSD-3-Clause',
+];
 
-if ($usePrompts) {
-    $vendor = \Laravel\Prompts\text(
-        label: 'Vendor name',
-        default: 'Convertain',
-        required: true,
-    );
+// Feature options
+$featureOptions = [
+    'config' => 'Config file',
+    'routes_web' => 'Web routes',
+    'routes_api' => 'API routes',
+    'views' => 'Views',
+    'translations' => 'Translations',
+    'migrations' => 'Database migrations',
+];
+
+// Check if Laravel Prompts form() is available
+$usePromptsForm = function_exists('Laravel\\Prompts\\form');
+
+if ($usePromptsForm) {
+    // Display intro message about navigation
+    \Laravel\Prompts\intro('Laravel Package Template - Package Configurator');
+    \Laravel\Prompts\info('💡 Tip: Use CTRL+U to go back to a previous step at any time.');
+    echo "\n";
     
-    $defaultPackageSlug = slugify(basename(getcwd()));
-    $package = \Laravel\Prompts\text(
-        label: 'Package name (slug-friendly)',
-        default: $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name',
-        required: true,
-    );
+    $confirmed = false;
     
-    $packageDescription = \Laravel\Prompts\text(
-        label: 'Package description',
-        placeholder: 'E.g. This package does something awesome.',
-    );
+    while (! $confirmed) {
+        // Collect all data using form() for go-back support
+        $responses = \Laravel\Prompts\form()
+            ->text(
+                label: 'Vendor name',
+                default: 'Convertain',
+                required: 'Vendor name is required.',
+                hint: 'Your company or personal brand name (e.g., Convertain, Spatie)',
+                name: 'vendor',
+            )
+            ->add(function ($responses) use ($defaultPackageSlug) {
+                return \Laravel\Prompts\text(
+                    label: 'Package name',
+                    default: $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name',
+                    required: 'Package name is required.',
+                    hint: 'Use lowercase with hyphens (e.g., my-awesome-package)',
+                );
+            }, name: 'package')
+            ->text(
+                label: 'Package description',
+                placeholder: 'A short description of what your package does...',
+                hint: 'This will appear in composer.json and README',
+                name: 'description',
+            )
+            ->add(function ($responses) {
+                $vendorSlug = slugify($responses['vendor'] ?? 'vendor');
+                $packageSlug = slugify($responses['package'] ?? 'package-name');
+                return \Laravel\Prompts\text(
+                    label: 'Base namespace',
+                    default: studly($responses['vendor'] ?? 'Vendor').'\\'.studly($responses['package'] ?? 'Package'),
+                    required: 'Namespace is required.',
+                    hint: 'PSR-4 namespace for your package classes',
+                );
+            }, name: 'namespace')
+            ->add(function ($responses) use ($gitName) {
+                return \Laravel\Prompts\text(
+                    label: 'Author name',
+                    default: $gitName !== '' ? $gitName : 'Author Name',
+                    hint: 'Your name or organization name',
+                );
+            }, name: 'author_name')
+            ->add(function ($responses) use ($gitEmail) {
+                return \Laravel\Prompts\text(
+                    label: 'Author email',
+                    default: $gitEmail !== '' ? $gitEmail : 'support@example.com',
+                    hint: 'Contact email for package inquiries',
+                );
+            }, name: 'author_email')
+            ->add(function ($responses) {
+                $vendorSlug = slugify($responses['vendor'] ?? 'vendor');
+                $packageSlug = slugify($responses['package'] ?? 'package-name');
+                return \Laravel\Prompts\text(
+                    label: 'GitHub repository URL',
+                    default: "https://github.com/{$vendorSlug}/{$packageSlug}",
+                    hint: 'URL where the package will be hosted',
+                );
+            }, name: 'github_url')
+            ->select(
+                label: 'License',
+                options: $licenseOptions,
+                default: 'Proprietary',
+                hint: 'Choose the license for your package',
+                name: 'license',
+            )
+            ->multiselect(
+                label: 'Features to include',
+                options: $featureOptions,
+                default: ['config', 'routes_web', 'views', 'translations', 'migrations'],
+                hint: 'Select the scaffolding components you need (Space to toggle)',
+                name: 'features',
+            )
+            ->confirm(
+                label: 'Install Laravel Boost?',
+                default: true,
+                yes: 'Yes',
+                no: 'No',
+                hint: 'AI-powered development tools for your IDE',
+                name: 'install_boost',
+            )
+            ->confirm(
+                label: 'Remove install.php after setup?',
+                default: true,
+                yes: 'Yes',
+                no: 'No',
+                hint: 'Recommended: remove the installer for a clean package',
+                name: 'remove_installer',
+            )
+            ->submit();
+        
+        // Extract values
+        $vendor = $responses['vendor'];
+        $package = $responses['package'];
+        $packageDescription = $responses['description'] ?? '';
+        $namespace = $responses['namespace'];
+        $authorName = $responses['author_name'] ?? '';
+        $authorEmail = $responses['author_email'] ?? '';
+        $githubUrl = $responses['github_url'] ?? '';
+        $licenseChoice = $responses['license'];
+        $selectedFeatures = $responses['features'] ?? [];
+        $installBoost = $responses['install_boost'];
+        $removeInstaller = $responses['remove_installer'];
+        
+        // Derive slugs
+        $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
+        $packageSlug = slugify($package !== '' ? $package : 'package-name');
+        $providerClass = studly($package).'ServiceProvider';
+        
+        // Format features for display
+        $enabledFeatures = array_filter($featureOptions, fn($key) => in_array($key, $selectedFeatures), ARRAY_FILTER_USE_KEY);
+        $featuresDisplay = empty($enabledFeatures) ? '(none)' : implode(', ', $enabledFeatures);
+        
+        // Show confirmation table
+        echo "\n";
+        \Laravel\Prompts\info('📋 Configuration Summary');
+        \Laravel\Prompts\table(
+            headers: ['Setting', 'Value'],
+            rows: [
+                ['Vendor', $vendor],
+                ['Package', $package],
+                ['Description', $packageDescription ?: '(not set)'],
+                ['Namespace', $namespace],
+                ['Provider Class', $providerClass],
+                ['Author', $authorName ?: '(not set)'],
+                ['Email', $authorEmail ?: '(not set)'],
+                ['GitHub URL', $githubUrl ?: '(not set)'],
+                ['License', $licenseChoice],
+                ['Features', $featuresDisplay],
+                ['Install Boost', $installBoost ? 'Yes' : 'No'],
+                ['Remove Installer', $removeInstaller ? 'Yes' : 'No'],
+            ],
+        );
+        echo "\n";
+        
+        // Ask for confirmation
+        $confirmed = \Laravel\Prompts\confirm(
+            label: 'Proceed with this configuration?',
+            default: true,
+            yes: 'Yes, continue',
+            no: 'No, start over',
+            hint: 'Select No to re-enter your package details',
+        );
+        
+        if (! $confirmed) {
+            echo "\n";
+            \Laravel\Prompts\warning('Starting over...');
+            echo "\n";
+        }
+    }
     
-    $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
-    $packageSlug = slugify($package !== '' ? $package : 'package-name');
-    
-    $namespace = \Laravel\Prompts\text(
-        label: 'Base namespace',
-        default: studly($vendor).'\\'.studly($package),
-        required: true,
-    );
-    
-    $providerClass = studly($package).'ServiceProvider';
-    
-    $authorName = \Laravel\Prompts\text(
-        label: 'Author name',
-        default: $gitName !== '' ? $gitName : 'Author Name',
-    );
-    
-    $authorEmail = \Laravel\Prompts\text(
-        label: 'Author email',
-        default: $gitEmail !== '' ? $gitEmail : 'support@example.com',
-    );
-    
-    $githubUrl = \Laravel\Prompts\text(
-        label: 'GitHub repository URL',
-        default: "https://github.com/{$vendorSlug}/{$packageSlug}",
-    );
-    
-    $licenseOptions = [
-        'MIT' => 'MIT',
-        'Proprietary' => 'proprietary',
-        'Apache-2.0' => 'Apache-2.0',
-        'BSD-3-Clause' => 'BSD-3-Clause',
-    ];
-    
-    $licenseChoice = \Laravel\Prompts\select(
-        label: 'License',
-        options: $licenseOptions,
-        default: 'Proprietary',
-    );
+    $licenseIdentifier = $licenseOptions[$licenseChoice];
 } else {
-    // Fallback to readline-based asks
+    // Fallback to readline-based asks (no form() available)
+    echo "\n";
+    echo str_repeat('=', 80)."\n";
+    echo "  Laravel Package Template - Package Configurator\n";
+    echo str_repeat('=', 80)."\n\n";
+    
     $vendor = ask('Vendor name', 'Convertain');
-    $defaultPackageSlug = slugify(basename(getcwd()));
     $package = ask('Package name (slug-friendly)', $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name');
     $packageDescription = ask('Package description', 'This package does something awesome.');
     
@@ -163,16 +282,9 @@ if ($usePrompts) {
     $namespace = ask('Base namespace', studly($vendor).'\\'.studly($package));
     $providerClass = studly($package).'ServiceProvider';
     
-    $authorName = ask('Author name', 'Convertain Limited');
-    $authorEmail = ask('Author email', 'support@convertain.com');
+    $authorName = ask('Author name', $gitName !== '' ? $gitName : 'Convertain Limited');
+    $authorEmail = ask('Author email', $gitEmail !== '' ? $gitEmail : 'support@convertain.com');
     $githubUrl = ask('GitHub repository URL', "https://github.com/{$vendorSlug}/{$packageSlug}");
-    
-    $licenseOptions = [
-        'MIT' => 'MIT',
-        'Proprietary' => 'proprietary',
-        'Apache-2.0' => 'Apache-2.0',
-        'BSD-3-Clause' => 'BSD-3-Clause',
-    ];
     
     $licenseChoice = ask(
         'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
@@ -186,49 +298,29 @@ if ($usePrompts) {
             'MIT',
         );
     }
+    
+    $licenseIdentifier = $licenseOptions[$licenseChoice];
+    
+    echo "\nSelect features (answer y/n for each):\n";
+    $selectedFeatures = [];
+    foreach ($featureOptions as $key => $label) {
+        $default = in_array($key, ['config', 'routes_web', 'views', 'translations', 'migrations']);
+        if (confirm("Include {$label}?", $default)) {
+            $selectedFeatures[] = $key;
+        }
+    }
+    
+    $installBoost = confirm('Install Laravel Boost?', true);
+    $removeInstaller = confirm('Remove install.php after setup?', true);
 }
 
-if (! array_key_exists($licenseChoice, $licenseOptions)) {
-    echo 'Invalid choice. Please enter one of: '.implode(', ', array_keys($licenseOptions)).PHP_EOL;
-    $licenseChoice = ask(
-        'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
-        'MIT',
-    );
-}
-
-$licenseIdentifier = $licenseOptions[$licenseChoice];
-
-// Multi-select features
-echo "\nSelect features to include:\n";
-
-$selectedFeatures = function_exists('Laravel\\Prompts\\multiselect') 
-    ? \Laravel\Prompts\multiselect(
-        label: 'Features',
-        options: [
-            'config' => 'Config file',
-            'routes_web' => 'Web routes',
-            'routes_api' => 'API routes',
-            'views' => 'Views',
-            'translations' => 'Translations',
-            'migrations' => 'Database migrations',
-        ],
-        default: ['config', 'routes_web', 'views', 'translations', 'migrations'],
-    )
-    : [];
-
-// No fallback: empty selection means all features disabled
-
+// Extract feature flags
 $useConfig = in_array('config', $selectedFeatures);
 $useRoutesWeb = in_array('routes_web', $selectedFeatures);
 $useRoutesApi = in_array('routes_api', $selectedFeatures);
 $useViews = in_array('views', $selectedFeatures);
 $useTranslations = in_array('translations', $selectedFeatures);
 $useMigrations = in_array('migrations', $selectedFeatures);
-
-// Install Boost confirmation with styled prompt
-$installBoost = function_exists('Laravel\\Prompts\\confirm')
-    ? \Laravel\Prompts\confirm('Install Laravel Boost?', default: true)
-    : confirm('Install Laravel Boost?', true);
 
 $replacements = [
     ':vendor_slug' => $vendorSlug,
@@ -560,11 +652,6 @@ $licenseContent = str_replace(array_keys($replacements), array_values($replaceme
 file_put_contents(__DIR__.'/LICENSE.md', $licenseContent.PHP_EOL);
 
 runCommand('composer dump-autoload', 'Composer dump-autoload failed.');
-
-// Ask about removing installer before data cleanup so Prompts is available
-$removeInstaller = function_exists('Laravel\\Prompts\\confirm')
-    ? \Laravel\Prompts\confirm('Remove install.php after setup?', default: true)
-    : confirm('Remove install.php after setup?', true);
 
 // Cleanup: remove the data templates directory now that installation is complete
 $dataDir = __DIR__.'/data';
