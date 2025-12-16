@@ -110,7 +110,7 @@ if ($usePrompts) {
     
     $packageDescription = \Laravel\Prompts\text(
         label: 'Package description',
-        default: 'This package does something awesome.',
+        placeholder: 'E.g. This package does something awesome.',
     );
     
     $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
@@ -216,16 +216,7 @@ $selectedFeatures = function_exists('Laravel\\Prompts\\multiselect')
     )
     : [];
 
-// Fallback to individual confirms if prompts not available
-if (empty($selectedFeatures)) {
-    $selectedFeatures = [];
-    if (confirm('Include config file?', true)) $selectedFeatures[] = 'config';
-    if (confirm('Include web routes?', true)) $selectedFeatures[] = 'routes_web';
-    if (confirm('Include API routes?', false)) $selectedFeatures[] = 'routes_api';
-    if (confirm('Include views?', true)) $selectedFeatures[] = 'views';
-    if (confirm('Include translations?', true)) $selectedFeatures[] = 'translations';
-    if (confirm('Include database migrations?', true)) $selectedFeatures[] = 'migrations';
-}
+// No fallback: empty selection means all features disabled
 
 $useConfig = in_array('config', $selectedFeatures);
 $useRoutesWeb = in_array('routes_web', $selectedFeatures);
