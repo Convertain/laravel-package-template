@@ -220,7 +220,7 @@ During installation, you can choose which GitHub Actions workflows to include in
    - Can be disabled if you prefer a different branching workflow
 
 3. **`validate-release.yml`** - Validates release tags follow semantic versioning and match the release branch
-   - Runs on: GitHub release published/created/edited events
+   - Runs on: GitHub release published/edited events
    - Can be disabled if you manage releases differently
 
 ### Branch Strategy & Releases
