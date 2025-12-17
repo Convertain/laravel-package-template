@@ -1,17 +1,3 @@
 {
-    "preset": "psr12",
-    "rules": {
-        "phpdoc_align": {
-            "align": "left"
-        },
-        "phpdoc_summary": true,
-        "ordered_imports": {
-            "sort_algorithm": "alpha"
-        }
-    },
-    "exclude": [
-        "vendor",
-        "workbench",
-        "build"
-    ]
+    "preset": "psr12"
 }
