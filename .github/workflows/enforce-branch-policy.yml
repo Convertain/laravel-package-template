@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   enforce-branch-policy:
@@ -33,10 +33,8 @@ jobs:
           if [[ "$PR_BASE_REF" =~ ^[0-9]+\.x$ && "$PR_HEAD_REF" != "master" ]]; then
             VIOLATION=true
             VIOLATION_REASON="Pull requests to release branches (\`1.x\`, \`2.x\`, etc.) can ONLY come from the \`master\` branch.\n\nPlease create a PR from \`master\` to your target release branch instead."
-          fi
-
           # Rule 2: PRs to master CANNOT come from release branches
-          if [[ "$PR_BASE_REF" == "master" && "$PR_HEAD_REF" =~ ^[0-9]+\.x$ ]]; then
+          elif [[ "$PR_BASE_REF" == "master" && "$PR_HEAD_REF" =~ ^[0-9]+\.x$ ]]; then
             VIOLATION=true
             VIOLATION_REASON="Pull requests to the \`master\` branch CANNOT come from release branches (\`1.x\`, \`2.x\`, etc.).\n\nRelease branches are only for cherry-picking critical fixes and receiving merged changes from master. All new features and changes must be developed in feature branches and merged into master first."
           fi
