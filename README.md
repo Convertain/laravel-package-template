@@ -59,6 +59,32 @@ During installation you will be guided through:
 composer serve  # Start the workbench app
 ```
 
+### Branch setup (GitHub template repos)
+
+When you create a repo via GitHub’s **Use this template** button, GitHub initializes the default branch as `main`, but the branch policy in [.github/workflows/enforce-branch-policy.yml](.github/workflows/enforce-branch-policy.yml) runs on `master` and `*.x` release branches. After running `install.php`, align your branches with the policy:
+
+```bash
+# Rename local main to master and push it as the new default branch
+git branch -m main master
+git push origin -u master
+
+# Create the first release branch from master (example: 1.x)
+git checkout -b 1.x master
+git push origin -u 1.x
+
+# Switch the default branch to the release branch (requires GitHub CLI auth)
+gh repo edit --default-branch 1.x
+# Alternatively via GitHub UI: Repo → Settings → Default Branch → Change to 1.x, then save
+
+# Delete main on the remote (after default branch is changed)
+git push origin --delete main
+
+# Create a feature branch from master (open PRs from here into master)
+git checkout master
+git pull
+git checkout -b feature/your-feature
+```
+
 ## Available Commands
 
 ### Testing & Quality Assurance
