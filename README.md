@@ -85,14 +85,38 @@ After installation, your package will be:
 - Using namespace `Vendor\Package`
 - Auto-discovered by Laravel via `Vendor\Package\PackageServiceProvider`
 
-### Publishing Package Assets
+### Automatic Asset Registration
 
-Users of your package can publish configuration and assets:
+Based on the features you selected during `install.php`, your package will automatically register:
+
+| Feature | Auto-Registration | Description |
+|---------|-------------------|-------------|
+| **Configuration** | `mergeConfigFrom()` | Config values available via `config('your-package.key')` |
+| **Web Routes** | `loadRoutesFrom()` | Routes immediately available in the application |
+| **API Routes** | `loadRoutesFrom()` | API routes immediately available |
+| **Views** | `loadViewsFrom()` | Views accessible via `view('your-package::view-name')` |
+| **Translations** | `loadTranslationsFrom()` | Translations via `__('your-package::messages.key')` |
+| **Migrations** | `loadMigrationsFrom()` | Migrations run automatically with `php artisan migrate` |
+
+### Publishing Package Assets (Optional)
+
+Publishing is **optional** and only needed if users want to customize the package assets. The following publish tags are available based on your selected features:
 
 ```bash
+# Configuration file
 php artisan vendor:publish --tag=your-package-config
+
+# Blade views (for customization)
+php artisan vendor:publish --tag=your-package-views
+
+# Translation files
+php artisan vendor:publish --tag=your-package-lang
+
+# Migration files (if users need to modify them)
 php artisan vendor:publish --tag=your-package-migrations
 ```
+
+> **Note:** Replace `your-package` with your actual package slug (e.g., `my-awesome-package-config`).
 
 ## Included Technologies
 
