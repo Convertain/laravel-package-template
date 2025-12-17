@@ -130,6 +130,13 @@ $communityOptions = [
     'issue_templates' => 'GitHub Issue Templates',
 ];
 
+// GitHub Workflows options
+$workflowOptions = [
+    'ci' => 'CI/CD Pipeline (linting, static analysis, tests)',
+    'branch_policy' => 'Branch Policy Enforcement (enforce branching strategy)',
+    'release_validation' => 'Release Validation (validate release tags)',
+];
+
 // Check if Laravel Prompts form() is available
 $usePromptsForm = function_exists('Laravel\\Prompts\\form');
 
@@ -219,6 +226,13 @@ if ($usePromptsForm) {
                 hint: 'Documentation for contributors and security reporting',
                 name: 'community_files',
             )
+            ->multiselect(
+                label: 'GitHub Workflows to include',
+                options: $workflowOptions,
+                default: ['ci', 'branch_policy', 'release_validation'],
+                hint: 'Select workflows for CI/CD and release management (Space to toggle)',
+                name: 'workflows',
+            )
             ->select(
                 label: 'PHPStan validation level',
                 options: [
@@ -272,6 +286,7 @@ if ($usePromptsForm) {
         $licenseChoice = $responses['license'];
         $selectedFeatures = $responses['features'] ?? [];
         $selectedCommunityFiles = $responses['community_files'] ?? [];
+        $selectedWorkflows = $responses['workflows'] ?? [];
         $phpstanLevel = $responses['phpstan_level'];
         $pintPreset = $responses['pint_preset'];
         $installBoost = $responses['install_boost'];
@@ -288,6 +303,10 @@ if ($usePromptsForm) {
         // Format community files for display
         $enabledCommunity = array_filter($communityOptions, fn($key) => in_array($key, $selectedCommunityFiles), ARRAY_FILTER_USE_KEY);
         $communityDisplay = empty($enabledCommunity) ? '(none)' : implode(', ', $enabledCommunity);
+        
+        // Format workflows for display
+        $enabledWorkflows = array_filter($workflowOptions, fn($key) => in_array($key, $selectedWorkflows), ARRAY_FILTER_USE_KEY);
+        $workflowsDisplay = empty($enabledWorkflows) ? '(none)' : implode(', ', $enabledWorkflows);
         
         // Show confirmation table
         echo "\n";
@@ -306,6 +325,7 @@ if ($usePromptsForm) {
                 ['License', $licenseChoice],
                 ['Features', $featuresDisplay],
                 ['Community Files', $communityDisplay],
+                ['GitHub Workflows', $workflowsDisplay],
                 ['PHPStan Level', $phpstanLevel],
                 ['Pint Preset', $pintPreset],
                 ['Install Boost', $installBoost ? 'Yes' : 'No'],
@@ -409,6 +429,11 @@ $useMigrations = in_array('migrations', $selectedFeatures);
 $useContributing = in_array('contributing', $selectedCommunityFiles);
 $useSecurity = in_array('security', $selectedCommunityFiles);
 $useIssueTemplates = in_array('issue_templates', $selectedCommunityFiles);
+
+// Extract workflow flags
+$useCi = in_array('ci', $selectedWorkflows);
+$useBranchPolicy = in_array('branch_policy', $selectedWorkflows);
+$useReleaseValidation = in_array('release_validation', $selectedWorkflows);
 
 // Map Pint preset to display name for badges
 $pintPresetDisplay = match ($pintPreset) {
@@ -740,7 +765,8 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 $runStep('Configuring MCP and finalizing files', function () use (
     $installBoost, $rewriteMcp, $replacements, $providerTarget, $configTarget,
     $useConfig, $useRoutesWeb, $useRoutesApi, $useViews, $useTranslations, $useMigrations,
-    $licenseChoice, $useContributing, $useSecurity, $useIssueTemplates
+    $licenseChoice, $useContributing, $useSecurity, $useIssueTemplates,
+    $useCi, $useBranchPolicy, $useReleaseValidation
 ) {
     // Rewrite MCP configs if Boost is installed
     if ($installBoost) {
@@ -850,6 +876,14 @@ $runStep('Configuring MCP and finalizing files', function () use (
             $entries = @scandir($issueTemplateDir);
             if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) @rmdir($issueTemplateDir);
         }
+    }
+
+    // Delete unwanted workflow files
+    $workflowDir = __DIR__.'/.github/workflows';
+    if (is_dir($workflowDir)) {
+        if (! $useCi && file_exists($workflowDir.'/ci.yml')) @unlink($workflowDir.'/ci.yml');
+        if (! $useBranchPolicy && file_exists($workflowDir.'/enforce-branch-policy.yml')) @unlink($workflowDir.'/enforce-branch-policy.yml');
+        if (! $useReleaseValidation && file_exists($workflowDir.'/validate-release.yml')) @unlink($workflowDir.'/validate-release.yml');
     }
 
     return true;
