@@ -191,9 +191,12 @@ The repository includes GitHub Actions workflows that:
 2. **`enforce-branch-policy.yml`** - Enforces a branching strategy for organized development and releases
    - Runs on: `master` branch and `*.x` release branches (does NOT run on `main`)
 
-### Branch Strategy
+3. **`validate-release.yml`** - Validates release tags follow semantic versioning and match the release branch
+   - Runs on: GitHub release published/created/edited events
 
-The template includes an optional branch policy workflow that enforces this branching model for your generated package:
+### Branch Strategy & Releases
+
+The template includes optional workflows that enforce this branching model for your generated package:
 
 ```text
 Feature branches
@@ -201,15 +204,37 @@ Feature branches
 master (development/main development branch)
     ↓
 1.x, 2.x, etc. (release branches - only for critical hotfixes)
+    ↓
+GitHub Releases (v1.0.0, v1.0.1, v2.0.0, etc.)
 ```
 
-**Rules:**
+**Branch Rules:**
 
 - Feature branches → `master` (all new features and changes)
 - `master` → `1.x`, `2.x`, etc. (for releases only)
 - `1.x`, `2.x`, etc. → Only for critical hotfixes/cherry-picks
 
-**Note:** If you don't want to enforce this branching strategy, simply delete `.github/workflows/enforce-branch-policy.yml` from your generated package.
+**Release Validation:**
+
+When creating a GitHub release, the workflow validates:
+
+1. **Semantic Versioning**: Tag must match format `X.Y.Z` or `X.Y.Z-alpha` (e.g., `1.0.0`, `2.1.3-beta`)
+2. **Branch Matching**: Release from `1.x` must have tag starting with `1.` (e.g., `1.0.0`, `1.2.5`)
+3. **Correct Branch**: Release from `2.x` must have tag starting with `2.` (e.g., `2.0.0`, `2.1.0`)
+
+**Examples:**
+
+- ✅ Release `1.0.0` from `1.x` branch → Valid
+- ✅ Release `1.2.3-alpha` from `1.x` branch → Valid
+- ❌ Release `2.0.0` from `1.x` branch → Invalid (major version mismatch)
+- ❌ Release `1.0.0-invalid` from `1.x` branch → Invalid (non-semantic tag)
+
+**Disabling Workflows:**
+
+If you don't want to enforce these strategies, simply delete the corresponding files:
+
+- Remove `.github/workflows/enforce-branch-policy.yml` to disable branch policy checks
+- Remove `.github/workflows/validate-release.yml` to disable release validation
 
 ## License
 
