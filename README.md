@@ -183,16 +183,19 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 
 ## CI/CD Pipeline
 
-The repository includes GitHub Actions workflows that:
+During installation, you can choose which GitHub Actions workflows to include in your package. By default, all three are enabled:
 
 1. **`ci.yml`** - Validates code style with Laravel Pint, performs static analysis with PHPStan, and runs the test suite with PHPUnit
    - Runs on: `master` branch and `*.x` release branches
+   - Can be disabled during installation if you have a different CI/CD setup
 
 2. **`enforce-branch-policy.yml`** - Enforces a branching strategy for organized development and releases
    - Runs on: `master` branch and `*.x` release branches (does NOT run on `main`)
+   - Can be disabled if you prefer a different branching workflow
 
 3. **`validate-release.yml`** - Validates release tags follow semantic versioning and match the release branch
    - Runs on: GitHub release published/created/edited events
+   - Can be disabled if you manage releases differently
 
 ### Branch Strategy & Releases
 
@@ -229,12 +232,19 @@ When creating a GitHub release, the workflow validates:
 - ❌ Release `2.0.0` from `1.x` branch → Invalid (major version mismatch)
 - ❌ Release `1.0.0-invalid` from `1.x` branch → Invalid (non-semantic tag)
 
-**Disabling Workflows:**
+### Customizing Workflows
 
-If you don't want to enforce these strategies, simply delete the corresponding files:
+**During Installation:**
+When you run `install.php`, you'll be asked which GitHub workflows to include. All three workflows are selected by default, but you can deselect any you don't need.
 
-- Remove `.github/workflows/enforce-branch-policy.yml` to disable branch policy checks
+**After Installation:**
+If you want to disable a workflow after installation, simply delete the corresponding file:
+
+- Remove `.github/workflows/ci.yml` to disable CI/CD pipeline
+- Remove `.github/workflows/enforce-branch-policy.yml` to disable branch policy enforcement
 - Remove `.github/workflows/validate-release.yml` to disable release validation
+
+Or you can manually edit the workflow files to customize their behavior (e.g., change the branches they run on, add additional checks, etc.).
 
 ## License
 
