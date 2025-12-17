@@ -40,7 +40,7 @@ jobs:
           echo "Release tag: $RELEASE_TAG"
           echo "Target branch: $TARGET_BRANCH"
 
-          TAG_PATTERN='^[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9]+(\.[0-9]+)?$'
+          TAG_PATTERN='^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+(\.[0-9]+)?)?$'
 
           # Extract major version from tag (e.g., "1" from "1.0.0")
           TAG_MAJOR=$(echo "$RELEASE_TAG" | cut -d. -f1)
@@ -55,10 +55,10 @@ jobs:
             exit 1
           fi
 
-          # Validate tag format: MAJOR.MINOR.PATCH-<label>[.<number>]
+          # Validate tag format: MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-<label>[.<number>]
           if ! [[ "$RELEASE_TAG" =~ $TAG_PATTERN ]]; then
-            echo "❌ Release tag must follow MAJOR.MINOR.PATCH-<label>[.<number>] (e.g., 1.2.3-alpha or 1.2.3-beta.1)"
-            comment_on_release "Release blocked: tag must match MAJOR.MINOR.PATCH-<label>[.<number>] (e.g., 1.2.3-alpha or 1.2.3-beta.1). Got: $RELEASE_TAG"
+            echo "❌ Release tag must follow MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-<label>[.<number>] (e.g., 1.2.3, 1.2.3-alpha, or 1.2.3-beta.1)"
+            comment_on_release "Release blocked: tag must match MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-<label>[.<number>] (e.g., 1.2.3, 1.2.3-alpha, or 1.2.3-beta.1). Got: $RELEASE_TAG"
             exit 1
           fi
 
