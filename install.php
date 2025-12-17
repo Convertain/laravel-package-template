@@ -256,12 +256,12 @@ if ($usePromptsForm) {
                 label: 'Laravel Pint preset',
                 options: [
                     'psr12' => 'PSR-12',
-                    'laravel' => 'Laravel  (recommended)',
+                    'laravel' => 'Laravel',
                     'per' => 'PER Coding Style',
                     'symfony' => 'Symfony',
                     'empty' => 'Empty (no rules)',
                 ],
-                default: 'laravel',
+                default: 'psr12',
                 hint: 'Code style standard for formatting',
                 name: 'pint_preset',
             )
