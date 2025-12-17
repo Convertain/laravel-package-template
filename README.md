@@ -183,14 +183,33 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 
 ## CI/CD Pipeline
 
-The repository includes a GitHub Actions workflow that:
+The repository includes GitHub Actions workflows that:
 
-1. Validates code style with Laravel Pint
-2. Performs static analysis with PHPStan (at your configured level)
-3. Runs the test suite with PHPUnit
-4. Runs on pull requests and pushes to main branches
+1. **`ci.yml`** - Validates code style with Laravel Pint, performs static analysis with PHPStan, and runs the test suite with PHPUnit
+   - Runs on: `master` branch and `*.x` release branches
 
-Branches: `master`, `1.x`
+2. **`enforce-branch-policy.yml`** - Enforces a branching strategy for organized development and releases
+   - Runs on: `master` branch and `*.x` release branches (does NOT run on `main`)
+
+### Branch Strategy
+
+The template includes an optional branch policy workflow that enforces this branching model for your generated package:
+
+```text
+Feature branches
+    ↓
+master (development/main development branch)
+    ↓
+1.x, 2.x, etc. (release branches - only for critical hotfixes)
+```
+
+**Rules:**
+
+- Feature branches → `master` (all new features and changes)
+- `master` → `1.x`, `2.x`, etc. (for releases only)
+- `1.x`, `2.x`, etc. → Only for critical hotfixes/cherry-picks
+
+**Note:** If you don't want to enforce this branching strategy, simply delete `.github/workflows/enforce-branch-policy.yml` from your generated package.
 
 ## License
 

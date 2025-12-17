@@ -1,0 +1,64 @@
+name: Enforce Branch Merge Policy
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - master
+      - "[0-9]+.x"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  enforce-branch-policy:
+    name: Enforce Branch Merge Policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR merge direction
+        id: validate
+        run: |
+          PR_HEAD_REF="${{ github.head_ref }}"
+          PR_BASE_REF="${{ github.base_ref }}"
+
+          echo "PR is from: $PR_HEAD_REF"
+          echo "PR is targeting: $PR_BASE_REF"
+
+          VIOLATION=false
+          VIOLATION_REASON=""
+
+          # Rule 1: PRs to release branches (X.x) can ONLY come from master
+          if [[ "$PR_BASE_REF" =~ ^[0-9]+\.x$ && "$PR_HEAD_REF" != "master" ]]; then
+            VIOLATION=true
+            VIOLATION_REASON="Pull requests to release branches (\`1.x\`, \`2.x\`, etc.) can ONLY come from the \`master\` branch.\n\nPlease create a PR from \`master\` to your target release branch instead."
+          fi
+
+          # Rule 2: PRs to master CANNOT come from release branches
+          if [[ "$PR_BASE_REF" == "master" && "$PR_HEAD_REF" =~ ^[0-9]+\.x$ ]]; then
+            VIOLATION=true
+            VIOLATION_REASON="Pull requests to the \`master\` branch CANNOT come from release branches (\`1.x\`, \`2.x\`, etc.).\n\nRelease branches are only for cherry-picking critical fixes and receiving merged changes from master. All new features and changes must be developed in feature branches and merged into master first."
+          fi
+
+          if [[ "$VIOLATION" == "true" ]]; then
+            echo "violation=true" >> $GITHUB_OUTPUT
+            echo "reason=$VIOLATION_REASON" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "violation=false" >> $GITHUB_OUTPUT
+          exit 0
+
+      - name: Comment if policy violated
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reason = "${{ steps.validate.outputs.reason }}".replace(/\\n/g, '\n');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **PR Policy Violation**\n\n' + reason + '\n\n**Branch Strategy:**\n- Feature branches → `master` (development)\n- `master` → `1.x`, `2.x`, etc. (releases only)\n- `1.x`, `2.x`, etc. → Only for critical hotfixes/cherry-picks'
+            })
