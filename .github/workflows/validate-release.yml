@@ -13,22 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish }}
+
       - name: Validate release
         run: |
           RELEASE_TAG="${{ github.event.release.tag_name }}"
-          RELEASE_BRANCH="${{ github.ref_name }}"
+          TARGET_BRANCH="${{ github.event.release.target_commitish }}"
 
           echo "Release tag: $RELEASE_TAG"
-          echo "Release branch: $RELEASE_BRANCH"
+          echo "Target branch: $TARGET_BRANCH"
 
           # Extract major version from tag (e.g., "1" from "1.0.0")
           TAG_MAJOR=$(echo "$RELEASE_TAG" | cut -d. -f1)
 
           # Extract major version from branch (e.g., "1" from "1.x")
-          if [[ "$RELEASE_BRANCH" =~ ^([0-9]+)\.x$ ]]; then
+          if [[ "$TARGET_BRANCH" =~ ^([0-9]+)\.x$ ]]; then
             BRANCH_MAJOR="${BASH_REMATCH[1]}"
           else
             echo "❌ Releases can only be created from release branches (1.x, 2.x, etc.)"
+            echo "Got: $TARGET_BRANCH"
             exit 1
           fi
 
@@ -40,9 +46,9 @@ jobs:
 
           # Validate major version matches branch
           if [[ "$TAG_MAJOR" != "$BRANCH_MAJOR" ]]; then
-            echo "❌ Release tag major version ($TAG_MAJOR) does not match branch ($RELEASE_BRANCH)"
-            echo "Branch $RELEASE_BRANCH can only release versions starting with $BRANCH_MAJOR"
+            echo "❌ Release tag major version ($TAG_MAJOR) does not match branch ($TARGET_BRANCH)"
+            echo "Branch $TARGET_BRANCH can only release versions starting with $BRANCH_MAJOR"
             exit 1
           fi
 
-          echo "✅ Release validation passed: $RELEASE_TAG from $RELEASE_BRANCH"
+          echo "✅ Release validation passed: $RELEASE_TAG from $TARGET_BRANCH"
