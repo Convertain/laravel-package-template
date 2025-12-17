@@ -200,7 +200,7 @@ if ($usePromptsForm) {
                 $vendorSlug = slugify($responses['vendor'] ?? 'vendor');
                 $packageSlug = slugify($responses['package'] ?? 'package-name');
                 return \Laravel\Prompts\text(
-                    label: 'GitHub repository URL',
+                    label: 'Homepage or GitHub repository URL',
                     default: "https://github.com/{$vendorSlug}/{$packageSlug}",
                     hint: 'URL where the package will be hosted',
                 );
