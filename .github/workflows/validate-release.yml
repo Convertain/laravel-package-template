@@ -5,7 +5,7 @@ on:
     types: [published, edited]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-release:
@@ -19,12 +19,28 @@ jobs:
           ref: ${{ github.event.release.target_commitish }}
 
       - name: Validate release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
+          comment_on_release() {
+            local body="$1"
+            curl -sS \
+              -X POST \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/comments" \
+              -d "{\"body\":\"${body}\"}" >/dev/null || echo "⚠️ Failed to add release comment"
+          }
+
           RELEASE_TAG="${{ github.event.release.tag_name }}"
           TARGET_BRANCH="${{ github.event.release.target_commitish }}"
 
           echo "Release tag: $RELEASE_TAG"
           echo "Target branch: $TARGET_BRANCH"
+
+          TAG_PATTERN='^[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9]+(\.[0-9]+)?$'
 
           # Extract major version from tag (e.g., "1" from "1.0.0")
           TAG_MAJOR=$(echo "$RELEASE_TAG" | cut -d. -f1)
@@ -35,12 +51,14 @@ jobs:
           else
             echo "❌ Releases can only be created from release branches (1.x, 2.x, etc.)"
             echo "Got: $TARGET_BRANCH"
+            comment_on_release "Release blocked: releases must target a release branch like 1.x or 2.x. Got: $TARGET_BRANCH"
             exit 1
           fi
 
-          # Validate tag format (should be semantic versioning)
-          if ! [[ "$RELEASE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
-            echo "❌ Release tag must follow semantic versioning (e.g., 1.0.0, 1.0.0-alpha)"
+          # Validate tag format: MAJOR.MINOR.PATCH-<label>[.<number>]
+          if ! [[ "$RELEASE_TAG" =~ $TAG_PATTERN ]]; then
+            echo "❌ Release tag must follow MAJOR.MINOR.PATCH-<label>[.<number>] (e.g., 1.2.3-alpha or 1.2.3-beta.1)"
+            comment_on_release "Release blocked: tag must match MAJOR.MINOR.PATCH-<label>[.<number>] (e.g., 1.2.3-alpha or 1.2.3-beta.1). Got: $RELEASE_TAG"
             exit 1
           fi
 
@@ -48,6 +66,7 @@ jobs:
           if [[ "$TAG_MAJOR" != "$BRANCH_MAJOR" ]]; then
             echo "❌ Release tag major version ($TAG_MAJOR) does not match branch ($TARGET_BRANCH)"
             echo "Branch $TARGET_BRANCH can only release versions starting with $BRANCH_MAJOR"
+            comment_on_release "Release blocked: major version mismatch. Branch $TARGET_BRANCH can only release versions starting with $BRANCH_MAJOR but got $RELEASE_TAG"
             exit 1
           fi
 
