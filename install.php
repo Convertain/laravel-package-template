@@ -666,6 +666,18 @@ if ($installBoost) {
         echo "\n→ Installing Laravel Boost...\n";
     }
     runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
+    
+    // Add post-update-cmd script to composer.json after Boost installation
+    $composerPath = __DIR__.'/composer.json';
+    $composer = json_decode((string) file_get_contents($composerPath), true, flags: JSON_THROW_ON_ERROR);
+    
+    if (! isset($composer['scripts'])) {
+        $composer['scripts'] = [];
+    }
+    
+    $composer['scripts']['post-update-cmd'] = ['composer build && vendor/bin/testbench boost:update --ansi'];
+    
+    file_put_contents($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL);
 }
 
 // Helper to rewrite MCP configs to use Testbench
