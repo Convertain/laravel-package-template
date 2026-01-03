@@ -24,7 +24,7 @@ foreach ($possiblePaths as $path) {
 return RectorConfig::configure()
     ->withPaths($paths)
     ->withSkipPath(__DIR__.'/vendor')
-    ->withPhpSets(php82: true)
+    ->withPhpSets(php85: true)
     ->withSets([
         LaravelSetList::LARAVEL_120,
     ])
