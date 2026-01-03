@@ -3,6 +3,7 @@
 [![Laravel 12.x](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
 [![PHP 8.2 - 8.5](https://img.shields.io/badge/PHP-8.2%20to%208.5-777BB4?style=flat-square&logo=php)](https://www.php.net)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%200--10-brightgreen?style=flat-square)](https://phpstan.org)
+[![Rector](https://img.shields.io/badge/Rector-Enabled-blue?style=flat-square)](https://getrector.com)
 [![Laravel Pint](https://img.shields.io/badge/Laravel%20Pint-Configurable-FF2D20?style=flat-square)](https://laravel.com/docs/pint)
 [![Sponsor Convertain](https://img.shields.io/badge/Sponsor-Convertain-blue?style=flat-square&logo=github)](https://github.com/sponsors/Convertain)
 
@@ -90,10 +91,12 @@ git checkout -b feature/your-feature
 ### Testing & Quality Assurance
 
 ```bash
-composer test      # Run the test suite with PHPUnit
-composer analyse   # Run PHPStan static analysis (configured level)
-composer lint      # Check and fix code style with Laravel Pint
-composer lint:fix  # Auto-fix code style issues
+composer test       # Run the test suite with PHPUnit
+composer analyse    # Run PHPStan static analysis (configured level)
+composer lint       # Check and fix code style with Laravel Pint
+composer rector     # Run Rector for automated code improvements
+composer rector:dry # Preview Rector changes without applying
+composer check      # Run all quality checks: lint → rector → lint → analyse → test
 ```
 
 ### Development
@@ -155,6 +158,9 @@ php artisan vendor:publish --tag=your-package-migrations
 | [PHPStan](https://phpstan.org) | ^2 (Level 0-10) | Static code analysis | [Docs](https://phpstan.org/user-guide/getting-started) |
 | [Larastan](https://github.com/larastan/larastan) | ^3 | Laravel-aware PHPStan | [Docs](https://github.com/larastan/larastan) |
 | [Laravel Pint](https://laravel.com/docs/pint) | ^1.14 | Code style formatter | [Docs](https://laravel.com/docs/pint) |
+| [Rector](https://getrector.com) | ^2 | Automated code upgrades & refactoring | [Docs](https://getrector.com/documentation) |
+| [Rector Laravel](https://github.com/driftingly/rector-laravel) | ^2 | Laravel-specific Rector rules | [Docs](https://github.com/driftingly/rector-laravel) |
+| [Roave Security Advisories](https://github.com/Roave/SecurityAdvisories) | dev-latest | Blocks vulnerable dependencies | [GitHub](https://github.com/Roave/SecurityAdvisories) |
 | [Laravel Boost](https://boost.laravel.com) | ^1.0 | Development enhancement | [Docs](https://boost.laravel.com) |
 | [phpstan/extension-installer](https://github.com/phpstan/extension-installer) | ^1.4 | PHPStan extension auto-discovery | [GitHub](https://github.com/phpstan/extension-installer) |
 
@@ -204,6 +210,7 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 ├── phpstan.neon.dist
 ├── phpunit.xml.dist
 ├── pint.json
+├── rector.php                   # Rector configuration
 └── README.md
 ```
 
@@ -211,7 +218,7 @@ All configurations are set to use `vendor/bin/testbench boost:mcp` for Laravel B
 
 During installation, you can choose which GitHub Actions workflows to include in your package. By default, all three are enabled:
 
-1. **`ci.yml`** - Validates code style with Laravel Pint, performs static analysis with PHPStan, and runs the test suite with PHPUnit
+1. **`ci.yml`** - Validates code style with Laravel Pint, runs Rector for code quality, performs static analysis with PHPStan, and runs the test suite with PHPUnit
    - Runs on: `master` branch and `*.x` release branches
    - Can be disabled during installation if you have a different CI/CD setup
 

@@ -33,3 +33,6 @@ Thumbs.db
 
 # Local overrides
 phpunit.xml
+
+# Workbench storage (symlink)
+workbench/storage
