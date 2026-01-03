@@ -164,6 +164,67 @@ php artisan vendor:publish --tag=your-package-migrations
 | [Laravel Boost](https://boost.laravel.com) | ^1.0 | Development enhancement | [Docs](https://boost.laravel.com) |
 | [phpstan/extension-installer](https://github.com/phpstan/extension-installer) | ^1.4 | PHPStan extension auto-discovery | [GitHub](https://github.com/phpstan/extension-installer) |
 
+## Rector Configuration
+
+This template includes [Rector](https://getrector.com) for automated code refactoring and upgrades. Rector applies consistent code improvements across your package, ensuring modern PHP and Laravel best practices.
+
+### What is Rector?
+
+Rector is a tool that automatically upgrades and refactors PHP code. It can:
+
+- Upgrade PHP syntax to newer versions
+- Apply Laravel-specific refactorings via [Rector Laravel](https://github.com/driftingly/rector-laravel)
+- Enforce coding standards beyond what formatters can do
+- Prepare your code for major framework upgrades
+
+### Configuration File
+
+The template includes a `rector.php` configuration file with sensible defaults:
+
+```php
+return RectorConfig::configure()
+    ->withPaths(['config', 'src', 'tests'])
+    ->withPhpSets(php82: true)
+    ->withPreparedSets(deadCode: true, codeQuality: true, typeDeclarations: true)
+    ->withSets([LaravelSetList::LARAVEL_120])
+    ->withRules([
+        AddVoidReturnTypeWhereNoReturnRector::class,
+        StaticArrowFunctionRector::class,
+        StaticClosureRector::class,
+    ]);
+```
+
+### Available Rector Commands
+
+```bash
+# Apply Rector refactorings to your code
+composer rector
+
+# Preview changes without applying them (dry-run)
+composer rector:dry
+```
+
+### Rector in CI/CD
+
+The CI workflow runs `composer rector:dry` after Pint to ensure no Rector rules are violated. This catches issues before they're merged:
+
+```yaml
+- name: Run Pint
+  run: composer lint
+
+- name: Run Rector (dry-run)
+  run: composer rector:dry
+```
+
+### Customizing Rector Rules
+
+Edit `rector.php` to add or remove rule sets. See the [Rector documentation](https://getrector.com/documentation) and [Rector Laravel rules](https://github.com/driftingly/rector-laravel) for available options:
+
+- **PHP Sets**: `->withPhpSets(php83: true)` - Target specific PHP versions
+- **Prepared Sets**: `deadCode`, `codeQuality`, `typeDeclarations`, `privatization`
+- **Laravel Sets**: `LaravelSetList::LARAVEL_120`, `LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_FQCN`
+- **Individual Rules**: Add specific rules via `->withRules([...])`
+
 ## MCP Configuration
 
 The installer automatically updates MCP configurations for popular code editors:
