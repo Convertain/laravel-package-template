@@ -950,16 +950,15 @@ unlink(__FILE__);
 // Step 8: Run code quality checks (shows output)
 if ($usePromptsForm) {
     echo "\n";
-    \Laravel\Prompts\info('🔍 Running code quality checks...');
+    \Laravel\Prompts\info('🔍 Running code quality checks (lint → rector → analyse → test)...');
     echo "\n";
 } else {
     echo "\n".str_repeat('=', 60)."\n";
-    echo "  Running code quality checks...\n";
+    echo "  Running code quality checks (lint → rector → analyse → test)...\n";
     echo str_repeat('=', 60)."\n\n";
 }
 
-passthru('composer lint', $lintExit);
-passthru('composer analyse', $analyseExit);
+passthru('composer check', $checkExit);
 
 // Final success message
 if ($usePromptsForm) {
@@ -968,7 +967,7 @@ if ($usePromptsForm) {
     echo "\n";
     \Laravel\Prompts\info("Next steps:");
     echo "  → Run 'composer serve' to start the development server\n";
-    echo "  → Run 'composer test' to run the test suite\n";
+    echo "  → Run 'composer check' to run all quality checks\n";
     echo "\n";
 } else {
     echo "\n".str_repeat('=', 60)."\n";
@@ -976,7 +975,7 @@ if ($usePromptsForm) {
     echo str_repeat('=', 60)."\n\n";
     echo "Next steps:\n";
     echo "  → Run 'composer serve' to start the development server\n";
-    echo "  → Run 'composer test' to run the test suite\n\n";
+    echo "  → Run 'composer check' to run all quality checks\n\n";
 }
 
 exit(0);
