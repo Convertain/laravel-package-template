@@ -43,6 +43,9 @@ jobs:
       - name: Run Pint
         run: composer lint
 
+      - name: Run Rector (dry-run)
+        run: composer rector:dry
+
   static-analysis:
     name: Static Analysis (PHP 8.2)
     needs: code-style
