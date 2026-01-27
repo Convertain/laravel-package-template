@@ -651,8 +651,8 @@ $testbenchBinary = __DIR__.'/vendor/bin/testbench';
 
 // Step 4: Setup Workbench
 $runStep('Setting up Workbench environment', function () use ($testbenchBinary) {
-    runCommandSilent($testbenchBinary.' workbench:install --no-interaction --ansi', 'Workbench install failed.');
-    runCommandSilent($testbenchBinary.' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
+    runCommandSilent(escapeshellarg($testbenchBinary).' workbench:install --no-interaction --ansi', 'Workbench install failed.');
+    runCommandSilent(escapeshellarg($testbenchBinary).' migrate:fresh --no-interaction --ansi', 'Database migration failed.');
     return true;
 });
 
@@ -665,7 +665,7 @@ if ($installBoost) {
     } else {
         echo "\n→ Installing Laravel Boost...\n";
     }
-    runCommand($testbenchBinary.' boost:install --ansi', 'Boost install failed.');
+    runCommand(escapeshellarg($testbenchBinary).' boost:install --ansi', 'Boost install failed.');
     
     // Add post-update-cmd script to composer.json after Boost installation
     $composerPath = __DIR__.'/composer.json';
