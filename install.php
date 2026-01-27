@@ -294,7 +294,8 @@ if ($usePromptsForm) {
         // Derive slugs
         $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
         $packageSlug = slugify($package !== '' ? $package : 'package-name');
-        $providerClass = studly($package).'ServiceProvider';
+        $namespaceParts = explode('\\', $namespace);
+        $providerClass = end($namespaceParts).'ServiceProvider';
         
         // Format features for display
         $enabledFeatures = array_filter($featureOptions, fn($key) => in_array($key, $selectedFeatures), ARRAY_FILTER_USE_KEY);
@@ -364,7 +365,8 @@ if ($usePromptsForm) {
     $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
     $packageSlug = slugify($package !== '' ? $package : 'package-name');
     $namespace = ask('Base namespace', studly($vendor).'\\'.studly($package));
-    $providerClass = studly($package).'ServiceProvider';
+    $namespaceParts = explode('\\', $namespace);
+    $providerClass = end($namespaceParts).'ServiceProvider';
     
     $authorName = ask('Author name', $gitName !== '' ? $gitName : 'Convertain Limited');
     $authorEmail = ask('Author email', $gitEmail !== '' ? $gitEmail : 'support@convertain.com');
