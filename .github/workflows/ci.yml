@@ -38,7 +38,7 @@ permissions:
   contents: read
 
 env:
-  COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"}}'
+  COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"}, "http-basic": {"composer.fluxui.dev": {"username": "${{ secrets.FLUX_USERNAME }}", "password": "${{ secrets.FLUX_LICENSE_KEY }}"}}}'
   PHP_VERSION: "8.5"
 
 jobs:
