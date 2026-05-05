@@ -40,7 +40,6 @@ permissions:
 env:
   COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"}}'
   PHP_VERSION: "8.5"
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ============================================================================
@@ -58,7 +57,7 @@ jobs:
       has-manifest: ${{ steps.detect.outputs.has-manifest }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -68,7 +67,7 @@ jobs:
           coverage: none
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -132,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -142,7 +141,7 @@ jobs:
           coverage: none
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -169,7 +168,7 @@ jobs:
         stability: [prefer-stable, prefer-lowest]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -179,7 +178,7 @@ jobs:
           coverage: none
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ matrix.stability }}-${{ hashFiles('composer.json') }}
@@ -207,7 +206,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -217,7 +216,7 @@ jobs:
           coverage: none
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -239,7 +238,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -249,7 +248,7 @@ jobs:
           coverage: none
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -278,7 +277,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -288,7 +287,7 @@ jobs:
           coverage: pcov
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -307,7 +306,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Upload Infection report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: infection-report
@@ -327,7 +326,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -337,7 +336,7 @@ jobs:
           coverage: pcov
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -354,7 +353,7 @@ jobs:
         run: composer test:coverage
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: build/coverage/
@@ -371,7 +370,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -381,7 +380,7 @@ jobs:
           coverage: none
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
@@ -400,7 +399,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
