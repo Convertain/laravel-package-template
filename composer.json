@@ -48,7 +48,8 @@
             "@lint",
             "@analyse",
             "@test"
-        ]
+        ],
+        "test:coverage": "XDEBUG_MODE=coverage phpunit --coverage-clover build/coverage/clover.xml --coverage-html build/coverage/html"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
