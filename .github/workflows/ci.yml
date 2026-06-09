@@ -28,7 +28,7 @@ on:
   pull_request:
     branches: [master, main, "1.x"]
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: "35 0 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
