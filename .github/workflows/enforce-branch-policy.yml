@@ -29,14 +29,27 @@ jobs:
           VIOLATION=false
           VIOLATION_REASON=""
 
-          # Rule 1: PRs to release branches (X.x) can ONLY come from master
-          if [[ "$PR_BASE_REF" =~ ^[0-9]+\.x$ && "$PR_HEAD_REF" != "master" ]]; then
-            VIOLATION=true
-            VIOLATION_REASON="Pull requests to release branches (\`1.x\`, \`2.x\`, etc.) can ONLY come from the \`master\` branch.\n\nPlease create a PR from \`master\` to your target release branch instead."
-          # Rule 2: PRs to master CANNOT come from release branches
-          elif [[ "$PR_BASE_REF" == "master" && "$PR_HEAD_REF" =~ ^[0-9]+\.x$ ]]; then
-            VIOLATION=true
-            VIOLATION_REASON="Pull requests to the \`master\` branch CANNOT come from release branches (\`1.x\`, \`2.x\`, etc.).\n\nRelease branches are only for cherry-picking critical fixes and receiving merged changes from master. All new features and changes must be developed in feature branches and merged into master first."
+          # Merge-UP model (see docs/90 "Branch Naming Convention"): fixes flow UP toward master.
+          #   Allowed:  feature/staging -> master or X.x; a fix lands on the lowest affected X.x and
+          #             forward-ports UP (older X.x -> newer X.x -> master).
+          #   Blocked:  master -> X.x, and newer-major X.x -> older-major X.x — master (the next
+          #             unreleased major) and any newer major are never merged DOWN into a released line.
+          # Only a PR whose BASE is an X.x release branch can be a down-merge; base master is the top of
+          # the funnel, so anything (feature, staging, or a forward-ported X.x) may merge into it.
+          if [[ "$PR_BASE_REF" =~ ^[0-9]+\.x$ ]]; then
+            if [[ "$PR_HEAD_REF" == "master" ]]; then
+              # Rule 1: master must never merge DOWN into a release branch.
+              VIOLATION=true
+              VIOLATION_REASON="Pull requests to release branches (\`1.x\`, \`2.x\`, etc.) must NOT come from \`master\`.\n\nThis is a merge-up model: a fix lands on the lowest affected release branch and is merged UP to newer \`X.x\` branches and \`master\`. \`master\` (the next unreleased major) is never merged down into a released line."
+            elif [[ "$PR_HEAD_REF" =~ ^[0-9]+\.x$ ]]; then
+              # Rule 2: between release branches, only forward-port UP (older major -> newer major).
+              HEAD_MAJOR="${PR_HEAD_REF%%.x}"
+              BASE_MAJOR="${PR_BASE_REF%%.x}"
+              if (( HEAD_MAJOR > BASE_MAJOR )); then
+                VIOLATION=true
+                VIOLATION_REASON="Release-branch merges may only forward-port UP (older major -> newer major).\n\nA PR from \`${PR_HEAD_REF}\` into \`${PR_BASE_REF}\` merges a NEWER major down into an older one, which is not allowed. Fixes flow up (\`1.x\` -> \`2.x\` -> \`master\`), never down."
+              fi
+            fi
           fi
 
           if [[ "$VIOLATION" == "true" ]]; then
@@ -58,5 +71,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '❌ **PR Policy Violation**\n\n' + reason + '\n\n**Branch Strategy:**\n- Feature branches → `master` (development)\n- `master` → `1.x`, `2.x`, etc. (releases only)\n- `1.x`, `2.x`, etc. → Only for critical hotfixes/cherry-picks'
+              body: '❌ **PR Policy Violation**\n\n' + reason + '\n\n**Branch Strategy (merge-up):**\n- Feature branches → `staging` → `master` (development on the current, unreleased line)\n- A released-major fix → the lowest affected `X.x` branch (via `staging`/CI), then **merged up** → newer `X.x` → `master`\n- Never merge **down**: `master` → `X.x` and newer-`X.x` → older-`X.x` are blocked'
             })
