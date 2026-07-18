@@ -17,8 +17,8 @@
 
 # Environment
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
 
 # Output & cache
 /coverage
