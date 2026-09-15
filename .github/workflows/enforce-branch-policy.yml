@@ -32,7 +32,7 @@ jobs:
           # Merge-UP model (see docs/90 "Branch Naming Convention"): fixes flow UP toward master.
           #   Allowed:  feature/staging -> master or X.x; a fix lands on the lowest affected X.x and
           #             forward-ports UP (older X.x -> newer X.x -> master).
-          #   Blocked:  master -> X.x, and newer-major X.x -> older-major X.x — master (the next
+          #   Blocked:  master -> X.x, and newer-major X.x -> older-major X.x - master (the next
           #             unreleased major) and any newer major are never merged DOWN into a released line.
           # Only a PR whose BASE is an X.x release branch can be a down-merge; base master is the top of
           # the funnel, so anything (feature, staging, or a forward-ported X.x) may merge into it.

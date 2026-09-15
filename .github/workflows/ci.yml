@@ -5,14 +5,14 @@
 # It auto-detects available composer scripts and conditionally runs stages.
 #
 # Stages:
-#   1. Lint & Style — pint --test, rector --dry-run, composer validate
-#   2. Static Analysis — phpstan analyse
-#   3. Tests — phpunit (prefer-stable + prefer-lowest)
-#   4. Architecture Tests — composer test:arch (if script exists)
-#   5. Snapshot Tests — composer test:snapshot (if script exists)
-#   6. Mutation Testing — composer test:mutation (master push only, if exists)
-#   7. Code Coverage — composer test:coverage (push only, if exists)
-#   8. Manifest Validation — scripts/validate-manifest.php (if exists)
+#   1. Lint & Style - pint --test, rector --dry-run, composer validate
+#   2. Static Analysis - phpstan analyse
+#   3. Tests - phpunit (prefer-stable + prefer-lowest)
+#   4. Architecture Tests - composer test:arch (if script exists)
+#   5. Snapshot Tests - composer test:snapshot (if script exists)
+#   6. Mutation Testing - composer test:mutation (master push only, if exists)
+#   7. Code Coverage - composer test:coverage (push only, if exists)
+#   8. Manifest Validation - scripts/validate-manifest.php (if exists)
 #
 # Execution strategy: Sequential with fail-fast to minimize runner minutes.
 # =============================================================================
