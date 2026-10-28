@@ -26,7 +26,7 @@ return RectorConfig::configure()
     ->withSkipPath(__DIR__.'/vendor')
     ->withPhpSets(php85: true)
     ->withSets([
-        LaravelSetList::LARAVEL_120,
+        LaravelSetList::LARAVEL_130_WITHOUT_ATTRIBUTES,
     ])
     ->withPreparedSets(
         deadCode: true,
@@ -37,8 +37,8 @@ return RectorConfig::configure()
     ->withSkip([
         // These rules remove @var annotations that PHPStan needs for type inference
         \Rector\DeadCode\Rector\Node\RemoveNonExistingVarAnnotationRector::class,
-        // FlipTypeControlToUseExclusiveTypeRector can cause issues with nullable types
-        \Rector\CodeQuality\Rector\Identical\FlipTypeControlToUseExclusiveTypeRector::class,
+        // ExplicitNullableObjectInstanceRector can cause issues with nullable types
+        \Rector\CodeQuality\Rector\If_\ExplicitNullableObjectInstanceRector::class,
     ])
     ->withRules([
         // Laravel-specific improvements
