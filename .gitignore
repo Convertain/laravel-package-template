@@ -36,3 +36,4 @@ phpunit.xml
 
 # Workbench storage (symlink)
 workbench/storage
+composer.local.lock
