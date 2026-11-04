@@ -145,9 +145,9 @@ if ($usePromptsForm) {
     \Laravel\Prompts\intro('Laravel Package Template - Package Configurator');
     \Laravel\Prompts\info('💡 Tip: Use CTRL+U to go back to a previous step at any time.');
     echo "\n";
-    
+
     $confirmed = false;
-    
+
     while (! $confirmed) {
         // Collect all data using form() for go-back support
         $responses = \Laravel\Prompts\form()
@@ -274,7 +274,7 @@ if ($usePromptsForm) {
                 name: 'install_boost',
             )
             ->submit();
-        
+
         // Extract values
         $vendor = $responses['vendor'];
         $package = $responses['package'];
@@ -290,25 +290,25 @@ if ($usePromptsForm) {
         $phpstanLevel = $responses['phpstan_level'];
         $pintPreset = $responses['pint_preset'];
         $installBoost = $responses['install_boost'];
-        
+
         // Derive slugs
         $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
         $packageSlug = slugify($package !== '' ? $package : 'package-name');
         $namespaceParts = explode('\\', $namespace);
         $providerClass = end($namespaceParts).'ServiceProvider';
-        
+
         // Format features for display
-        $enabledFeatures = array_filter($featureOptions, fn($key) => in_array($key, $selectedFeatures), ARRAY_FILTER_USE_KEY);
+        $enabledFeatures = array_filter($featureOptions, fn ($key) => in_array($key, $selectedFeatures), ARRAY_FILTER_USE_KEY);
         $featuresDisplay = empty($enabledFeatures) ? '(none)' : implode(', ', $enabledFeatures);
-        
+
         // Format community files for display
-        $enabledCommunity = array_filter($communityOptions, fn($key) => in_array($key, $selectedCommunityFiles), ARRAY_FILTER_USE_KEY);
+        $enabledCommunity = array_filter($communityOptions, fn ($key) => in_array($key, $selectedCommunityFiles), ARRAY_FILTER_USE_KEY);
         $communityDisplay = empty($enabledCommunity) ? '(none)' : implode(', ', $enabledCommunity);
-        
+
         // Format workflows for display
-        $enabledWorkflows = array_filter($workflowOptions, fn($key) => in_array($key, $selectedWorkflows), ARRAY_FILTER_USE_KEY);
+        $enabledWorkflows = array_filter($workflowOptions, fn ($key) => in_array($key, $selectedWorkflows), ARRAY_FILTER_USE_KEY);
         $workflowsDisplay = empty($enabledWorkflows) ? '(none)' : implode(', ', $enabledWorkflows);
-        
+
         // Show confirmation table
         echo "\n";
         \Laravel\Prompts\info('📋 Configuration Summary');
@@ -333,7 +333,7 @@ if ($usePromptsForm) {
             ],
         );
         echo "\n";
-        
+
         // Ask for confirmation
         $confirmed = \Laravel\Prompts\confirm(
             label: 'Proceed with this configuration?',
@@ -342,14 +342,14 @@ if ($usePromptsForm) {
             no: 'No, start over',
             hint: 'Select No to re-enter your package details',
         );
-        
+
         if (! $confirmed) {
             echo "\n";
             \Laravel\Prompts\warning('Starting over...');
             echo "\n";
         }
     }
-    
+
     $licenseIdentifier = $licenseOptions[$licenseChoice];
 } else {
     // Fallback to readline-based asks (no form() available)
@@ -357,26 +357,26 @@ if ($usePromptsForm) {
     echo str_repeat('=', 80)."\n";
     echo "  Laravel Package Template - Package Configurator\n";
     echo str_repeat('=', 80)."\n\n";
-    
+
     $vendor = ask('Vendor name', 'Convertain');
     $package = ask('Package name (slug-friendly)', $defaultPackageSlug !== '' ? $defaultPackageSlug : 'laravel-package-name');
     $packageDescription = ask('Package description', 'This package does something awesome.');
-    
+
     $vendorSlug = slugify($vendor !== '' ? $vendor : 'vendor');
     $packageSlug = slugify($package !== '' ? $package : 'package-name');
     $namespace = ask('Base namespace', studly($vendor).'\\'.studly($package));
     $namespaceParts = explode('\\', $namespace);
     $providerClass = end($namespaceParts).'ServiceProvider';
-    
+
     $authorName = ask('Author name', $gitName !== '' ? $gitName : 'Convertain Limited');
     $authorEmail = ask('Author email', $gitEmail !== '' ? $gitEmail : 'support@convertain.com');
     $githubUrl = ask('GitHub repository URL', "https://github.com/{$vendorSlug}/{$packageSlug}");
-    
+
     $licenseChoice = ask(
         'License (MIT/Proprietary/Apache-2.0/BSD-3-Clause)',
         'Proprietary',
     );
-    
+
     while (! array_key_exists($licenseChoice, $licenseOptions)) {
         echo 'Invalid choice. Please enter one of: '.implode(', ', array_keys($licenseOptions)).PHP_EOL;
         $licenseChoice = ask(
@@ -384,9 +384,9 @@ if ($usePromptsForm) {
             'MIT',
         );
     }
-    
+
     $licenseIdentifier = $licenseOptions[$licenseChoice];
-    
+
     echo "\nSelect features (answer y/n for each):\n";
     $selectedFeatures = [];
     foreach ($featureOptions as $key => $label) {
@@ -395,7 +395,7 @@ if ($usePromptsForm) {
             $selectedFeatures[] = $key;
         }
     }
-    
+
     echo "\nSelect community files (answer y/n for each):\n";
     $selectedCommunityFiles = [];
     foreach ($communityOptions as $key => $label) {
@@ -403,19 +403,19 @@ if ($usePromptsForm) {
             $selectedCommunityFiles[] = $key;
         }
     }
-    
+
     $phpstanLevel = ask('PHPStan level (0-10, higher is stricter)', '10');
     while (! in_array($phpstanLevel, ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], true)) {
         echo "Invalid choice. Please enter a number between 0 and 10.\n";
         $phpstanLevel = ask('PHPStan level (0-10, higher is stricter)', '10');
     }
-    
+
     $pintPreset = ask('Laravel Pint preset (laravel/per/psr12/symfony/empty)', 'psr12');
     while (! in_array($pintPreset, ['laravel', 'per', 'psr12', 'symfony', 'empty'], true)) {
         echo "Invalid choice. Please enter one of: laravel, per, psr12, symfony, empty\n";
         $pintPreset = ask('Laravel Pint preset (laravel/per/psr12/symfony/empty)', 'psr12');
     }
-    
+
     $installBoost = confirm('Install Laravel Boost?', true);
 }
 
@@ -477,7 +477,7 @@ $runStep = function (string $label, callable $callback) use ($usePromptsForm): m
             message: $label,
         );
     }
-    
+
     // Fallback: show label and run
     echo "→ {$label}...".PHP_EOL;
     $result = $callback();
@@ -502,11 +502,27 @@ $configTarget = null;
 
 // Step 1: Configure package files
 $runStep('Configuring package files', function () use (
-    $composerPath, $vendorSlug, $packageSlug, $packageDescription, $licenseIdentifier,
-    $namespace, $providerClass, $githubUrl, $authorName, $authorEmail,
-    $phpstanLevel, $pintPreset, $useConfig, $useRoutesWeb, $useRoutesApi,
-    $useViews, $useTranslations, $useMigrations, $replacements,
-    &$providerTarget, &$configTarget
+    $composerPath,
+    $vendorSlug,
+    $packageSlug,
+    $packageDescription,
+    $licenseIdentifier,
+    $namespace,
+    $providerClass,
+    $githubUrl,
+    $authorName,
+    $authorEmail,
+    $phpstanLevel,
+    $pintPreset,
+    $useConfig,
+    $useRoutesWeb,
+    $useRoutesApi,
+    $useViews,
+    $useTranslations,
+    $useMigrations,
+    $replacements,
+    &$providerTarget,
+    &$configTarget
 ) {
     // Update composer.json
     $composer = json_decode((string) file_get_contents($composerPath), true, flags: JSON_THROW_ON_ERROR);
@@ -558,22 +574,36 @@ $runStep('Configuring package files', function () use (
             $configTarget = $configPath;
         }
     } else {
-        if (file_exists($configPath)) unlink($configPath);
-        if (file_exists($configTarget)) unlink($configTarget);
+        if (file_exists($configPath)) {
+            unlink($configPath);
+        }
+        if (file_exists($configTarget)) {
+            unlink($configTarget);
+        }
         $configTarget = null;
     }
 
     // Handle routes
     $routesDir = __DIR__.'/routes';
-    if (! $useRoutesWeb && file_exists($routesDir.'/web.php')) unlink($routesDir.'/web.php');
-    if (! $useRoutesApi && file_exists($routesDir.'/api.php')) unlink($routesDir.'/api.php');
-    if (is_dir($routesDir) && count(glob($routesDir.'/*')) === 0) @rmdir($routesDir);
+    if (! $useRoutesWeb && file_exists($routesDir.'/web.php')) {
+        unlink($routesDir.'/web.php');
+    }
+    if (! $useRoutesApi && file_exists($routesDir.'/api.php')) {
+        unlink($routesDir.'/api.php');
+    }
+    if (is_dir($routesDir) && count(glob($routesDir.'/*')) === 0) {
+        @rmdir($routesDir);
+    }
 
     // Helper to remove empty dirs
     $removeDirIfEmpty = function (string $dir): void {
-        if (! is_dir($dir)) return;
+        if (! is_dir($dir)) {
+            return;
+        }
         $entries = @scandir($dir);
-        if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) @rmdir($dir);
+        if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) {
+            @rmdir($dir);
+        }
     };
 
     // Handle views
@@ -581,7 +611,9 @@ $runStep('Configuring package files', function () use (
     if (! $useViews && is_dir($viewsDir)) {
         $it = new RecursiveDirectoryIterator($viewsDir, FilesystemIterator::SKIP_DOTS);
         $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($files as $f) { $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
+        foreach ($files as $f) {
+            $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname());
+        }
         @rmdir($viewsDir);
     }
     $removeDirIfEmpty(__DIR__.'/resources');
@@ -591,7 +623,9 @@ $runStep('Configuring package files', function () use (
     if (! $useTranslations && is_dir($langDir)) {
         $it = new RecursiveDirectoryIterator($langDir, FilesystemIterator::SKIP_DOTS);
         $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($files as $f) { $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
+        foreach ($files as $f) {
+            $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname());
+        }
         @rmdir($langDir);
     }
 
@@ -600,7 +634,9 @@ $runStep('Configuring package files', function () use (
     if (! $useMigrations && is_dir($migrationsDir)) {
         $it = new RecursiveDirectoryIterator($migrationsDir, FilesystemIterator::SKIP_DOTS);
         $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($files as $f) { $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname()); }
+        foreach ($files as $f) {
+            $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname());
+        }
         @rmdir($migrationsDir);
     }
     $removeDirIfEmpty(__DIR__.'/database');
@@ -668,17 +704,17 @@ if ($installBoost) {
         echo "\n→ Installing Laravel Boost...\n";
     }
     runCommand(escapeshellarg($testbenchBinary).' boost:install --ansi', 'Boost install failed.');
-    
+
     // Add post-update-cmd script to composer.json after Boost installation
     $composerPath = __DIR__.'/composer.json';
     $composer = json_decode((string) file_get_contents($composerPath), true, flags: JSON_THROW_ON_ERROR);
-    
+
     if (! isset($composer['scripts'])) {
         $composer['scripts'] = [];
     }
-    
+
     $composer['scripts']['post-update-cmd'] = ['composer build && vendor/bin/testbench boost:update --ansi'];
-    
+
     file_put_contents($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL);
 }
 
@@ -777,10 +813,24 @@ $rewriteMcp = function (string $path, bool $waitForCreate = false): void {
 
 // Step 6: Configure MCP and finalize files
 $runStep('Configuring MCP and finalizing files', function () use (
-    $installBoost, $rewriteMcp, $replacements, $providerTarget, $configTarget,
-    $useConfig, $useRoutesWeb, $useRoutesApi, $useViews, $useTranslations, $useMigrations,
-    $licenseChoice, $useContributing, $useSecurity, $useIssueTemplates,
-    $useCi, $useBranchPolicy, $useReleaseValidation
+    $installBoost,
+    $rewriteMcp,
+    $replacements,
+    $providerTarget,
+    $configTarget,
+    $useConfig,
+    $useRoutesWeb,
+    $useRoutesApi,
+    $useViews,
+    $useTranslations,
+    $useMigrations,
+    $licenseChoice,
+    $useContributing,
+    $useSecurity,
+    $useIssueTemplates,
+    $useCi,
+    $useBranchPolicy,
+    $useReleaseValidation
 ) {
     // Rewrite MCP configs if Boost is installed
     if ($installBoost) {
@@ -852,7 +902,9 @@ $runStep('Configuring MCP and finalizing files', function () use (
             file_put_contents(__DIR__.'/CONTRIBUTING.md', $content);
         }
     } else {
-        if (file_exists(__DIR__.'/CONTRIBUTING.md')) @unlink(__DIR__.'/CONTRIBUTING.md');
+        if (file_exists(__DIR__.'/CONTRIBUTING.md')) {
+            @unlink(__DIR__.'/CONTRIBUTING.md');
+        }
     }
 
     if ($useSecurity) {
@@ -863,14 +915,18 @@ $runStep('Configuring MCP and finalizing files', function () use (
             file_put_contents(__DIR__.'/SECURITY.md', $content);
         }
     } else {
-        if (file_exists(__DIR__.'/SECURITY.md')) @unlink(__DIR__.'/SECURITY.md');
+        if (file_exists(__DIR__.'/SECURITY.md')) {
+            @unlink(__DIR__.'/SECURITY.md');
+        }
     }
 
     if ($useIssueTemplates) {
         $issueTemplateDir = __DIR__.'/.github/ISSUE_TEMPLATE';
         $dataIssueTemplateDir = __DIR__.'/data/github/ISSUE_TEMPLATE';
         if (is_dir($dataIssueTemplateDir)) {
-            if (! is_dir($issueTemplateDir)) mkdir($issueTemplateDir, 0755, true);
+            if (! is_dir($issueTemplateDir)) {
+                mkdir($issueTemplateDir, 0755, true);
+            }
             foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
                 $sourcePath = $dataIssueTemplateDir.'/'.$templateFile;
                 if (file_exists($sourcePath)) {
@@ -885,19 +941,29 @@ $runStep('Configuring MCP and finalizing files', function () use (
         if (is_dir($issueTemplateDir)) {
             foreach (['bug_report.md', 'feature_request.md'] as $templateFile) {
                 $filePath = $issueTemplateDir.'/'.$templateFile;
-                if (file_exists($filePath)) @unlink($filePath);
+                if (file_exists($filePath)) {
+                    @unlink($filePath);
+                }
             }
             $entries = @scandir($issueTemplateDir);
-            if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) @rmdir($issueTemplateDir);
+            if ($entries !== false && count(array_diff($entries, ['.', '..'])) === 0) {
+                @rmdir($issueTemplateDir);
+            }
         }
     }
 
     // Delete unwanted workflow files
     $workflowDir = __DIR__.'/.github/workflows';
     if (is_dir($workflowDir)) {
-        if (! $useCi && file_exists($workflowDir.'/ci.yml')) @unlink($workflowDir.'/ci.yml');
-        if (! $useBranchPolicy && file_exists($workflowDir.'/enforce-branch-policy.yml')) @unlink($workflowDir.'/enforce-branch-policy.yml');
-        if (! $useReleaseValidation && file_exists($workflowDir.'/validate-release.yml')) @unlink($workflowDir.'/validate-release.yml');
+        if (! $useCi && file_exists($workflowDir.'/ci.yml')) {
+            @unlink($workflowDir.'/ci.yml');
+        }
+        if (! $useBranchPolicy && file_exists($workflowDir.'/enforce-branch-policy.yml')) {
+            @unlink($workflowDir.'/enforce-branch-policy.yml');
+        }
+        if (! $useReleaseValidation && file_exists($workflowDir.'/validate-release.yml')) {
+            @unlink($workflowDir.'/validate-release.yml');
+        }
     }
 
     return true;
@@ -931,10 +997,14 @@ $runStep('Cleaning up temporary files', function () {
             $removed = [];
             foreach ($lines as $line) {
                 $line = trim($line);
-                if ($line === '' || ! preg_match('/^(\S+)\s+(\S+)\s+\(fetch\)$/', $line, $matches)) continue;
+                if ($line === '' || ! preg_match('/^(\S+)\s+(\S+)\s+\(fetch\)$/', $line, $matches)) {
+                    continue;
+                }
                 $remoteName = $matches[1];
                 $remoteUrl = $matches[2];
-                if (isset($removed[$remoteName])) continue;
+                if (isset($removed[$remoteName])) {
+                    continue;
+                }
                 if (str_contains($remoteUrl, $templateRepo)) {
                     shell_exec('git remote remove '.escapeshellarg($remoteName).' 2>/dev/null');
                     $removed[$remoteName] = true;

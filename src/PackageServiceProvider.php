@@ -85,7 +85,7 @@ class PackageServiceProvider extends ServiceProvider
 
         if (is_dir(__DIR__.'/../lang')) {
             $targetLangPath = function_exists('lang_path')
-                ? call_user_func('lang_path', 'vendor/package-template')
+                ? call_user_func(lang_path(...), 'vendor/package-template')
                 : resource_path('lang/vendor/package-template');
 
             $this->publishes([
