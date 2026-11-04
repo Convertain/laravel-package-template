@@ -30,7 +30,7 @@ We welcome suggestions for new features or improvements! Please create an issue 
 
 ### Pull Requests
 
-1. **Fork the repository** and create a new branch from `main`
+1. **Fork the repository** and create a new branch from `master`
 2. **Make your changes** to template files or the installer
 3. **Test the installer** by running it and verifying the generated package works
 4. **Update documentation** (README.md) if needed

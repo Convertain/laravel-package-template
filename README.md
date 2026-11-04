@@ -62,23 +62,12 @@ composer serve  # Start the workbench app
 
 ### Branch setup (GitHub template repos)
 
-When you create a repo via GitHub’s **Use this template** button, GitHub initializes the default branch as `main`, but the branch policy in [.github/workflows/enforce-branch-policy.yml](.github/workflows/enforce-branch-policy.yml) runs on `master` and `*.x` release branches. After running `install.php`, align your branches with the policy:
+A repo created with GitHub’s **Use this template** button starts on `master`, the template's default branch and the default branch of every Convertain package (`Documentation/docs/90-tooling-and-conventions.md` → "Branch Naming Convention"). The branch policy in [.github/workflows/enforce-branch-policy.yml](.github/workflows/enforce-branch-policy.yml) runs on `master` and `*.x` release branches:
 
 ```bash
-# Rename local main to master and push it as the new default branch
-git branch -m main master
-git push origin -u master
-
-# Create the first release branch from master (example: 1.x)
+# Create the first release branch from master when the package needs one (example: 1.x)
 git checkout -b 1.x master
 git push origin -u 1.x
-
-# Switch the default branch to the release branch (requires GitHub CLI auth)
-gh repo edit --default-branch 1.x
-# Alternatively via GitHub UI: Repo → Settings → Default Branch → Change to 1.x, then save
-
-# Delete main on the remote (after default branch is changed)
-git push origin --delete main
 
 # Create a feature branch from master (open PRs from here into master)
 git checkout master
