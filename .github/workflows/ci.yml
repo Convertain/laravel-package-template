@@ -75,6 +75,12 @@ jobs:
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
 
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
+
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
@@ -149,6 +155,12 @@ jobs:
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
 
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
+
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
@@ -188,6 +200,12 @@ jobs:
             deps-${{ env.PHP_VERSION }}-${{ matrix.stability }}-
             deps-${{ env.PHP_VERSION }}-
 
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
+
       - name: Install dependencies
         run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
 
@@ -224,6 +242,12 @@ jobs:
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
 
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
+
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
@@ -255,6 +279,12 @@ jobs:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
+
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
@@ -294,6 +324,12 @@ jobs:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
+
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
@@ -344,6 +380,12 @@ jobs:
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
 
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
+
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
@@ -387,6 +429,12 @@ jobs:
           path: ~/.composer/cache/files
           key: deps-${{ env.PHP_VERSION }}-${{ hashFiles('composer.json') }}
           restore-keys: deps-${{ env.PHP_VERSION }}-
+
+      # The unconverted template only: install.php exists until a package is set up from it.
+      # Composer rejects the placeholder name and licence, so the run fills them first.
+      - name: Fill the template placeholders (template repository only)
+        if: hashFiles('install.php') != ''
+        run: sed -i 's#":vendor_slug/:package_slug"#"convertain/laravel-package-template"#; s#":license"#"proprietary"#' composer.json
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
